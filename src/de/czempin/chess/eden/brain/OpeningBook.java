@@ -55,7 +55,7 @@ import java.util.Map;
 				fillBlackOpenings(br);
 			} else {
 				if (Options.DEBUG)
-					System.out.println("wqrning: opening book file '" + bbFileName + "' not found");
+					System.out.println("warning: opening book file '" + bbFileName + "' not found");
 
 			}
 			final String wbFilename = "bookWhite.txt";
