@@ -107,8 +107,7 @@
 /*     */   {
 /* 108 */     if ((brainThread != null) && (brainThread.isAlive())) {
 /* 109 */       String move = this.brain.getBestMoveSoFar();
-/*     */       String toPrint;
-/* 111 */       String toPrint; if (move == null) {
+/*     */       String toPrint; if (move == null) {
 /* 112 */         toPrint = printMove(null);
 /*     */       } else
 /* 114 */         toPrint = printMove(move);

@@ -6,6 +6,7 @@
 /*      */ import de.czempin.chess.Variation;
 /*      */ import de.czempin.chess.eden.Eden;
 /*      */ import de.czempin.chess.eden.Move;
+
 /*      */ import java.io.PrintStream;
 /*      */ import java.util.HashMap;
 /*      */ import java.util.Iterator;
@@ -39,15 +40,15 @@
 /*   39 */       timeIsUp = true;
 /*   40 */       return 0;
 /*      */     }
+Position nextPos;
 /*      */     try
 /*      */     {
 /*   44 */       Info.ab_nodes += 1;
 /*   45 */       nextPos = Position.createPosition(position, move);
-/*      */     } catch (ThreeRepetitionsAB e) { Position nextPos;
+/*      */     } catch (ThreeRepetitionsAB e) {
 /*   47 */       System.out.println("debug: three repetitions!");
 /*   48 */       return 0; }
-/*      */     Position nextPos;
-/*   50 */     if ((!justExtended) && (Options.useCheckExtensions) && (checkExtensions < 4) && (Info.idDepth > 4) && (nextPos.isReceivingCheck()))
+/*      */     if ((!justExtended) && (Options.useCheckExtensions) && (checkExtensions < 4) && (Info.idDepth > 4) && (nextPos.isReceivingCheck()))
 /*   51 */       return checkExtension(depth, extension, position, move, originalAlpha, beta, upPv, checkExtensions, true);
 /*   52 */     Set markForDelete = new java.util.HashSet();
 /*   53 */     int retVal = 0;
@@ -571,7 +572,8 @@
 /*  571 */     Iterator it1 = variation.iterator();
 /*      */     
 /*      */     String m;
-/*  574 */     for (String pv = ""; it1.hasNext(); pv = pv + m + " ") {
+String pv;
+/*  574 */     for (pv = ""; it1.hasNext(); pv = pv + m + " ") {
 /*  575 */       m = (String)it1.next();
 /*      */     }
 /*  577 */     return pv;
@@ -1008,7 +1010,8 @@
 /* 1008 */     zobrists = new long[2][6][89];
 /*      */     
 /*      */     Long randLong;
-/* 1011 */     for (Set zob = new java.util.HashSet(1068); zob.size() < 1068; zob.add(randLong)) {
+Set zob;
+/* 1011 */     for (zob = new java.util.HashSet(1068); zob.size() < 1068; zob.add(randLong)) {
 /* 1012 */       randLong = new Long(randomZobrist());
 /*      */     }
 /* 1014 */     Iterator it = zob.iterator();

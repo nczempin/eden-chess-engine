@@ -2,6 +2,7 @@
 /*     */ 
 /*     */ import de.czempin.chess.Options;
 /*     */ import de.czempin.chess.eden.Move;
+
 /*     */ import java.io.BufferedReader;
 /*     */ import java.io.FileNotFoundException;
 /*     */ import java.io.FileReader;
@@ -120,20 +121,20 @@
 /* 120 */             String[] ms = movePairs[j].split(" ");
 /*     */             
 /*     */             String ms2;
+String ms1;
 /* 123 */             if (ms.length == 1)
 /*     */             {
-/* 125 */               String ms1 = "";
+/* 125 */                ms1 = "";
 /* 126 */               ms2 = ms[0];
-/*     */             } else { String ms2;
+/*     */             } else { 
 /* 128 */               if (ms.length == 2)
 /*     */               {
-/* 130 */                 String ms1 = ms[0];
+/* 130 */                 ms1 = ms[0];
 /* 131 */                 ms2 = ms[1];
 /*     */               }
 /*     */               else {
 /* 134 */                 throw new IllegalArgumentException("Opening Book Format invalid: " + movePairs + "-->" + ms); } }
-/*     */             String ms2;
-/* 136 */             String ms1; bookAdd(p, ms1, ms2);
+/*     */              bookAdd(p, ms1, ms2);
 /*     */           }
 /*     */           
 /* 139 */           EdenBrain.threeDrawsTable.clear();

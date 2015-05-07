@@ -60,8 +60,7 @@
 /*    */   
 /*    */   public void calculateTimePerMove() {
 /*    */     long tpm;
-/*    */     long tpm;
-/* 64 */     if (this.engine.whiteToMove()) {
+/*    */  /* 64 */     if (this.engine.whiteToMove()) {
 /* 65 */       tpm = this.engine.calculateTimePerMove(this.engine.getWtime(), this.engine.getWinc());
 /*    */     } else
 /* 67 */       tpm = this.engine.calculateTimePerMove(this.engine.getBtime(), this.engine.getBinc());

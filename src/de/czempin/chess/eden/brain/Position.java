@@ -233,10 +233,10 @@
 /*  233 */     int kingHome = -1;
 /*      */     boolean castlingLong;
 /*      */     boolean castlingShort;
-/*  236 */     boolean castlingLong; if (p == 6)
+/*  236 */      if (p == 6)
 /*      */     {
 /*  238 */       kingHome = 15;
-/*  239 */       boolean castlingShort = position.getCastleShortWhite();
+/*  239 */        castlingShort = position.getCastleShortWhite();
 /*  240 */       castlingLong = position.getCastleLongWhite();
 /*      */     }
 /*      */     else {
@@ -745,7 +745,7 @@
 /*      */     long zobi;
 /*  746 */     if (move.to > move.from)
 /*      */     {
-/*  748 */       long zobi = kleinerZobristEntfernen(move.to - 10);
+/*  748 */        zobi = kleinerZobristEntfernen(move.to - 10);
 /*  749 */       clearSquare(move.to, -10, board);
 /*  750 */       this.blackPieces.remove(new Integer(move.to - 10));
 /*      */     }
@@ -2048,7 +2048,7 @@
 /*      */   
 /*      */   private int getPawnMidgameValue(int i, int plusminus, int file) {
 /*      */     int retValue;
-/*      */     int retValue;
+/*      */     
 /* 2052 */     if (plusminus > 0) {
 /* 2053 */       retValue = whitePawnSquareValues[(79 - i)];
 /*      */     } else
@@ -2219,7 +2219,7 @@
 /*      */   
 /*      */   private int getHorizontalKingTropism(int plusminus, int square) {
 /*      */     int kingPosition;
-/*      */     int kingPosition;
+/*      */     
 /* 2223 */     if (plusminus > 0) {
 /* 2224 */       kingPosition = this.blackKing;
 /*      */     } else
@@ -2231,7 +2231,7 @@
 /*      */   
 /*      */   private int getVerticalKingTropism(int plusminus, int square) {
 /*      */     int kingPosition;
-/*      */     int kingPosition;
+/*      */     
 /* 2235 */     if (plusminus > 0) {
 /* 2236 */       kingPosition = this.blackKing;
 /*      */     } else
@@ -3061,25 +3061,24 @@
 /* 3061 */     if ((movingPieceType == 6) && (Math.abs(move.from - move.to) == 2)) {
 /*      */       int rookTo;
 /*      */       int rookFrom;
-/*      */       int rookTo;
-/* 3065 */       if (move.to == 17)
+/*      */       if (move.to == 17)
 /*      */       {
-/* 3067 */         int rookFrom = 18;
+/* 3067 */          rookFrom = 18;
 /* 3068 */         rookTo = 16;
-/*      */       } else { int rookTo;
+/*      */       } else { 
 /* 3070 */         if (move.to == 87)
 /*      */         {
-/* 3072 */           int rookFrom = 88;
+/* 3072 */            rookFrom = 88;
 /* 3073 */           rookTo = 86;
-/*      */         } else { int rookTo;
+/*      */         } else {  
 /* 3075 */           if (move.to == 13)
 /*      */           {
-/* 3077 */             int rookFrom = 11;
+/* 3077 */              rookFrom = 11;
 /* 3078 */             rookTo = 14;
-/*      */           } else { int rookTo;
+/*      */           } else { 
 /* 3080 */             if (move.to == 83)
 /*      */             {
-/* 3082 */               int rookFrom = 81;
+/* 3082 */                rookFrom = 81;
 /* 3083 */               rookTo = 84;
 /*      */             }
 /*      */             else {
@@ -3228,25 +3227,24 @@
 /* 3228 */     if ((movingPieceType == 6) && (Math.abs(move.from - move.to) == 2)) {
 /*      */       int rookTo;
 /*      */       int rookFrom;
-/*      */       int rookTo;
-/* 3232 */       if (move.to == 17)
+/*      */       if (move.to == 17)
 /*      */       {
-/* 3234 */         int rookFrom = 18;
+/* 3234 */          rookFrom = 18;
 /* 3235 */         rookTo = 16;
-/*      */       } else { int rookTo;
+/*      */       } else { 
 /* 3237 */         if (move.to == 87)
 /*      */         {
-/* 3239 */           int rookFrom = 88;
+/* 3239 */            rookFrom = 88;
 /* 3240 */           rookTo = 86;
-/*      */         } else { int rookTo;
+/*      */         } else { 
 /* 3242 */           if (move.to == 13)
 /*      */           {
-/* 3244 */             int rookFrom = 11;
+/* 3244 */              rookFrom = 11;
 /* 3245 */             rookTo = 14;
-/*      */           } else { int rookTo;
+/*      */           } else {  
 /* 3247 */             if (move.to == 83)
 /*      */             {
-/* 3249 */               int rookFrom = 81;
+/* 3249 */                rookFrom = 81;
 /* 3250 */               rookTo = 84;
 /*      */             }
 /*      */             else {
@@ -3733,10 +3731,9 @@
 /* 3733 */     if (move.isCastling(Math.abs(this.board[move.from]))) {
 /*      */       int rookJumpTo;
 /*      */       int rookJumpFrom;
-/*      */       int rookJumpTo;
-/* 3737 */       if (move.to % 10 == 7)
+/*      */       if (move.to % 10 == 7)
 /*      */       {
-/* 3739 */         int rookJumpFrom = move.to + 1;
+/* 3739 */          rookJumpFrom = move.to + 1;
 /* 3740 */         rookJumpTo = move.to - 1;
 /*      */       }
 /*      */       else {
