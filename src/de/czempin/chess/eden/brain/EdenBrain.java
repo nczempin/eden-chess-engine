@@ -1031,7 +1031,7 @@ Set zob;
 /*      */   
 /*      */   public String getVersion()
 /*      */   {
-/*      */     return "0.0.13 JA";
+/*      */     return "0.0.13";
 /*      */   }
 /*      */ }
 
