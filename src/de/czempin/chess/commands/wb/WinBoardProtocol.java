@@ -1,128 +1,128 @@
-/*     */ package de.czempin.chess.commands.wb;
-/*     */ 
-/*     */ import de.czempin.chess.Engine;
-/*     */ import de.czempin.chess.Info;
-/*     */ import de.czempin.chess.Variation;
-/*     */ import de.czempin.chess.commands.Command;
-/*     */ import de.czempin.chess.commands.IgnoredCommand;
-/*     */ import de.czempin.chess.commands.UnknownCommand;
-/*     */ import java.io.PrintStream;
-/*     */ import java.util.SortedSet;
-/*     */ import java.util.TreeSet;
-/*     */ import java.util.Vector;
-/*     */ 
-/*     */ public class WinBoardProtocol implements de.czempin.chess.Protocol
-/*     */ {
-/*     */   Engine engine;
-/*     */   
-/*     */   public WinBoardProtocol(Engine engine)
-/*     */   {
-/*  20 */     this.engine = engine;
-/*     */   }
-/*     */   
-/*     */   public Command parse(String line) {
-/*  24 */     if (line.equals("xboard"))
-/*  25 */       return IgnoredCommand.getInstance();
-/*  26 */     if (line.equals("quit"))
-/*  27 */       return de.czempin.chess.commands.QuitCommand.getInstance();
-/*  28 */     if (line.equals("force"))
-/*  29 */       return new WBForceCommand(this.engine);
-/*  30 */     if (line.equals("?"))
-/*  31 */       return new de.czempin.chess.commands.StopCommand(this.engine);
-/*  32 */     if (line.startsWith("new"))
-/*  33 */       return new WBNewGameCommand(this.engine);
-/*  34 */     if (line.startsWith("level"))
-/*  35 */       return new WBLevelCommand(this.engine);
-/*  36 */     if (line.startsWith("time"))
-/*  37 */       return new WBTimeCommand(this.engine);
-/*  38 */     if (line.startsWith("otim"))
-/*  39 */       return IgnoredCommand.getInstance();
-/*  40 */     if (line.startsWith("random"))
-/*  41 */       return IgnoredCommand.getInstance();
-/*  42 */     if (line.startsWith("post"))
-/*  43 */       return IgnoredCommand.getInstance();
-/*  44 */     if (line.startsWith("hard"))
-/*  45 */       return IgnoredCommand.getInstance();
-/*  46 */     if (line.startsWith("easy"))
-/*  47 */       return IgnoredCommand.getInstance();
-/*  48 */     if (line.startsWith("computer"))
-/*  49 */       return IgnoredCommand.getInstance();
-/*  50 */     if (line.startsWith("name"))
-/*  51 */       return IgnoredCommand.getInstance();
-/*  52 */     if (line.startsWith("setboard"))
-/*  53 */       return WBSetboardCommand.getInstance();
-/*  54 */     if (line.startsWith("accepted"))
-/*  55 */       return IgnoredCommand.getInstance();
-/*  56 */     if (line.startsWith("exit"))
-/*  57 */       return IgnoredCommand.getInstance();
-/*  58 */     if (line.startsWith("."))
-/*  59 */       return IgnoredCommand.getInstance();
-/*  60 */     if (line.startsWith("bk"))
-/*  61 */       return IgnoredCommand.getInstance();
-/*  62 */     if (line.startsWith("hint"))
-/*  63 */       return IgnoredCommand.getInstance();
-/*  64 */     if (line.startsWith("undo"))
-/*  65 */       return UnknownCommand.getInstance();
-/*  66 */     if (line.startsWith("sd "))
-/*  67 */       return UnknownCommand.getInstance();
-/*  68 */     if (line.startsWith("st "))
-/*  69 */       return UnknownCommand.getInstance();
-/*  70 */     if (line.startsWith("result"))
-/*  71 */       return IgnoredCommand.getInstance();
-/*  72 */     if (line.startsWith("go"))
-/*  73 */       return new WBGoCommand(this.engine);
-/*  74 */     if (line.startsWith("protover"))
-/*  75 */       return new WBIDCommand(this.engine);
-/*  76 */     String command = line.split(" ")[0];
-/*  77 */     int length = command.length();
-/*  78 */     if ((length == 4) || (length == 5)) {
-/*  79 */       return new WBMoveCommand(this.engine, line);
-/*     */     }
-/*  81 */     return UnknownCommand.getInstance();
-/*     */   }
-/*     */   
-/*     */   public String printMoveMade(String move) {
-/*  85 */     this.engine.updateMoveCount();
-/*  86 */     this.engine.updateInternalClock();
-/*  87 */     return "move " + move + "\n";
-/*     */   }
-/*     */   
-/*     */ 
-/*     */   public void printInfo() {}
-/*     */   
-/*     */   public void printPV()
-/*     */   {
-/*  95 */     SortedSet values = new TreeSet();
-/*  96 */     values.addAll(this.engine.getMultiPvs());
-/*  97 */     Variation variation = (Variation)values.first();
-/*  98 */     Vector v = variation.getLine();
-/*  99 */     String pv = this.engine.getBrain().extractVariationString(v);
-/* 100 */     int multiPvValue = variation.getValue();
-/* 101 */     int multiPvDepth = variation.getDepth();
-/* 102 */     System.out.print(multiPvDepth + "\t");
-/* 103 */     System.out.print(multiPvValue + "\t");
-/* 104 */     int time = (int)(Info.time / 10L);
-/* 105 */     System.out.print(time + "\t");
-/* 106 */     System.out.print(Info.nodes + "\t");
-/* 107 */     System.out.print(pv);
-/* 108 */     System.out.println();
-/*     */   }
-/*     */   
-/*     */ 
-/*     */   public static void printWBdata() {}
-/*     */   
-/*     */   public void calculateTimePerMove()
-/*     */   {
-/* 116 */     long timeLeft = this.engine.getTimeToNextControl();
-/* 117 */     if (de.czempin.chess.Options.DEBUG)
-/* 118 */       System.out.println("debug: base time left: " + timeLeft);
-/* 119 */     long wbinc = this.engine.getWbinc();
-/* 120 */     long tpm = this.engine.calculateTimePerMove(timeLeft, wbinc);
-/* 121 */     this.engine.setTimePerMove(tpm);
-/*     */   }
-/*     */   
-/*     */   public void printCurrmove(int i, String s, boolean flag) {}
-/*     */ }
+ package de.czempin.chess.commands.wb;
+ 
+ import de.czempin.chess.Engine;
+ import de.czempin.chess.Info;
+ import de.czempin.chess.Variation;
+ import de.czempin.chess.commands.Command;
+ import de.czempin.chess.commands.IgnoredCommand;
+ import de.czempin.chess.commands.UnknownCommand;
+ import java.io.PrintStream;
+ import java.util.SortedSet;
+ import java.util.TreeSet;
+ import java.util.Vector;
+ 
+ public class WinBoardProtocol implements de.czempin.chess.Protocol
+ {
+   Engine engine;
+   
+   public WinBoardProtocol(Engine engine)
+   {
+     this.engine = engine;
+   }
+   
+   public Command parse(String line) {
+     if (line.equals("xboard"))
+       return IgnoredCommand.getInstance();
+     if (line.equals("quit"))
+       return de.czempin.chess.commands.QuitCommand.getInstance();
+     if (line.equals("force"))
+       return new WBForceCommand(this.engine);
+     if (line.equals("?"))
+       return new de.czempin.chess.commands.StopCommand(this.engine);
+     if (line.startsWith("new"))
+       return new WBNewGameCommand(this.engine);
+     if (line.startsWith("level"))
+       return new WBLevelCommand(this.engine);
+     if (line.startsWith("time"))
+       return new WBTimeCommand(this.engine);
+     if (line.startsWith("otim"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("random"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("post"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("hard"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("easy"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("computer"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("name"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("setboard"))
+       return WBSetboardCommand.getInstance();
+     if (line.startsWith("accepted"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("exit"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("."))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("bk"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("hint"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("undo"))
+       return UnknownCommand.getInstance();
+     if (line.startsWith("sd "))
+       return UnknownCommand.getInstance();
+     if (line.startsWith("st "))
+       return UnknownCommand.getInstance();
+     if (line.startsWith("result"))
+       return IgnoredCommand.getInstance();
+     if (line.startsWith("go"))
+       return new WBGoCommand(this.engine);
+     if (line.startsWith("protover"))
+       return new WBIDCommand(this.engine);
+     String command = line.split(" ")[0];
+     int length = command.length();
+     if ((length == 4) || (length == 5)) {
+       return new WBMoveCommand(this.engine, line);
+     }
+     return UnknownCommand.getInstance();
+   }
+   
+   public String printMoveMade(String move) {
+     this.engine.updateMoveCount();
+     this.engine.updateInternalClock();
+     return "move " + move + "\n";
+   }
+   
+ 
+   public void printInfo() {}
+   
+   public void printPV()
+   {
+     SortedSet values = new TreeSet();
+     values.addAll(this.engine.getMultiPvs());
+     Variation variation = (Variation)values.first();
+     Vector v = variation.getLine();
+     String pv = this.engine.getBrain().extractVariationString(v);
+     int multiPvValue = variation.getValue();
+     int multiPvDepth = variation.getDepth();
+     System.out.print(multiPvDepth + "\t");
+     System.out.print(multiPvValue + "\t");
+     int time = (int)(Info.time / 10L);
+     System.out.print(time + "\t");
+     System.out.print(Info.nodes + "\t");
+     System.out.print(pv);
+     System.out.println();
+   }
+   
+ 
+   public static void printWBdata() {}
+   
+   public void calculateTimePerMove()
+   {
+     long timeLeft = this.engine.getTimeToNextControl();
+     if (de.czempin.chess.Options.DEBUG)
+       System.out.println("debug: base time left: " + timeLeft);
+     long wbinc = this.engine.getWbinc();
+     long tpm = this.engine.calculateTimePerMove(timeLeft, wbinc);
+     this.engine.setTimePerMove(tpm);
+   }
+   
+   public void printCurrmove(int i, String s, boolean flag) {}
+ }
 
 
 /* Location:              /Users/nczempin/Desktop/eden-0013-ja/Original Jar/de.czempin.chess.eden-0013.jar!/de/czempin/chess/commands/wb/WinBoardProtocol.class

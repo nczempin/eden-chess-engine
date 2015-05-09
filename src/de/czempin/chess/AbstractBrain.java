@@ -1,16 +1,16 @@
-/*   */ package de.czempin.chess;
-/*   */ 
-/*   */ 
-/*   */ public abstract class AbstractBrain
-/*   */   implements Brain
-/*   */ {
-/*   */   public void setToStartPosition()
-/*   */   {
-/* 9 */     setFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-/*   */   }
-/*   */   
-/*   */   public abstract void setFENPosition(String paramString);
-/*   */ }
+ package de.czempin.chess;
+ 
+ 
+ public abstract class AbstractBrain
+   implements Brain
+ {
+   public void setToStartPosition()
+   {
+     setFENPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+   }
+   
+   public abstract void setFENPosition(String paramString);
+ }
 
 
 /* Location:              /Users/nczempin/Desktop/eden-0013-ja/Original Jar/de.czempin.chess.eden-0013.jar!/de/czempin/chess/AbstractBrain.class

@@ -1,46 +1,46 @@
-/*     */package de.czempin.chess.eden.brain;
+package de.czempin.chess.eden.brain;
 
-/*     */
-/*     */import de.czempin.chess.Options;
-/*     */
+
+import de.czempin.chess.Options;
+
 import de.czempin.chess.eden.Move;
 
-/*     */
+
 import java.io.BufferedReader;
 import java.io.File;
-/*     */
+
 import java.io.FileNotFoundException;
-/*     */
+
 import java.io.FileReader;
-/*     */
+
 import java.io.IOException;
-/*     */
+
 import java.io.PrintStream;
-/*     */
+
 import java.util.HashMap;
-/*     */
+
 import java.util.Map;
 
-/*     */
-/*     */
-/*     */
-/*     */
-/*     */
-/*     */
-/*     */
-/*     */
-/*     */
-/*     */
-/*     */public class OpeningBook
-/*     */{
-	/*     */static void prepareOpeningBook()
-	/*     */{
-		/* 26 */if (!Options.ownBook)
-		/*     */{
-			/* 28 */if (Options.DEBUG)
-				/* 29 */System.out.println("debug: OwnBook set to false, canceling Opening Book preparation");
-			/* 30 */return;
-			/*     */}
+
+
+
+
+
+
+
+
+
+
+public class OpeningBook
+{
+	static void prepareOpeningBook()
+	{
+		if (!Options.ownBook)
+		{
+			if (Options.DEBUG)
+				System.out.println("debug: OwnBook set to false, canceling Opening Book preparation");
+			return;
+			}
 		if (openingsLoaded) {
 			return;
 		}
@@ -96,107 +96,107 @@ import java.util.Map;
 							String ms2 = ms[1];
 							bookAdd(p, ms1, ms2);
 						}
-						/*     */}
-					/*     */
-					/* 85 */EdenBrain.threeDrawsTable.clear();
-					/*     */}
-				/*     */catch (ThreeRepetitionsAB e)
-				/*     */{
-					/* 89 */e.printStackTrace();
-					/*     */}
-				/*     */}
-			/*     */}
-		/*     */}
+						}
+					
+					EdenBrain.threeDrawsTable.clear();
+					}
+				catch (ThreeRepetitionsAB e)
+				{
+					e.printStackTrace();
+					}
+				}
+			}
+		}
 
-	/*     */
-	/*     */private static void bookAdd(Position p, String moveString1, String moveString2) throws ThreeRepetitionsAB
-	/*     */{
-		/* 97 */if ("".equals(moveString1)) {
-			/* 98 */p.setToStartPosition();
-			/*     */} else
-			/* 100 */p.makeMove(moveString1);
-		/* 101 */Move m = enterIntoBook(p, moveString2);
-		/* 102 */p.makeMove(m);
-		/*     */}
+	
+	private static void bookAdd(Position p, String moveString1, String moveString2) throws ThreeRepetitionsAB
+	{
+		if ("".equals(moveString1)) {
+			p.setToStartPosition();
+			} else
+			p.makeMove(moveString1);
+		Move m = enterIntoBook(p, moveString2);
+		p.makeMove(m);
+		}
 
-	/*     */
-	/*     */static void fillWhiteOpenings(BufferedReader br)
-	/*     */throws IOException
-	/*     */{
-		/*     */for (;;)
-		/*     */{
-			/* 110 */String line = br.readLine();
-			/* 111 */if (line == null)
-				/*     */break;
-			/* 113 */if (!line.startsWith("#")) {
-				/*     */try
-				/*     */{
-					/* 116 */Position p = new Position();
-					/* 117 */String[] movePairs = line.split("\\.");
-					/* 118 */for (int j = 0; j < movePairs.length; j++)
-					/*     */{
-						/* 120 */String[] ms = movePairs[j].split(" ");
-						/*     */
-						/*     */String ms2;
+	
+	static void fillWhiteOpenings(BufferedReader br)
+	throws IOException
+	{
+		for (;;)
+		{
+			String line = br.readLine();
+			if (line == null)
+				break;
+			if (!line.startsWith("#")) {
+				try
+				{
+					Position p = new Position();
+					String[] movePairs = line.split("\\.");
+					for (int j = 0; j < movePairs.length; j++)
+					{
+						String[] ms = movePairs[j].split(" ");
+						
+						String ms2;
 						String ms1;
-						/* 123 */if (ms.length == 1)
-						/*     */{
-							/* 125 */ms1 = "";
-							/* 126 */ms2 = ms[0];
-							/*     */} else {
-							/* 128 */if (ms.length == 2)
-							/*     */{
-								/* 130 */ms1 = ms[0];
-								/* 131 */ms2 = ms[1];
-								/*     */}
-							/*     */else {
-								/* 134 */throw new IllegalArgumentException("Opening Book Format invalid: " + movePairs + "-->" + ms);
+						if (ms.length == 1)
+						{
+							ms1 = "";
+							ms2 = ms[0];
+							} else {
+							if (ms.length == 2)
+							{
+								ms1 = ms[0];
+								ms2 = ms[1];
+								}
+							else {
+								throw new IllegalArgumentException("Opening Book Format invalid: " + movePairs + "-->" + ms);
 							}
 						}
-						/*     */bookAdd(p, ms1, ms2);
-						/*     */}
-					/*     */
-					/* 139 */EdenBrain.threeDrawsTable.clear();
-					/*     */}
-				/*     */catch (ThreeRepetitionsAB e)
-				/*     */{
-					/* 143 */e.printStackTrace();
-					/*     */}
-				/*     */}
-			/*     */}
-		/*     */}
+						bookAdd(p, ms1, ms2);
+						}
+					
+					EdenBrain.threeDrawsTable.clear();
+					}
+				catch (ThreeRepetitionsAB e)
+				{
+					e.printStackTrace();
+					}
+				}
+			}
+		}
 
-	/*     */
-	/*     */static Move enterIntoBook(Position p, String moveString) {
-		/* 150 */Long z = EdenBrain.getZobrist(p);
-		/* 151 */Move m = Move.create(p, moveString);
-		/* 152 */if (!openings.containsKey(z))
-			/* 153 */openings.put(z, m);
-		/* 154 */return m;
-		/*     */}
+	
+	static Move enterIntoBook(Position p, String moveString) {
+		Long z = EdenBrain.getZobrist(p);
+		Move m = Move.create(p, moveString);
+		if (!openings.containsKey(z))
+			openings.put(z, m);
+		return m;
+		}
 
-	/*     */
-	/*     */static Move checkOpeningBook(Position position)
-	/*     */{
-		/* 159 */if (Options.DEBUG)
-			/* 160 */System.out.println("debug: EdenBrain.checkOpeningBook()");
-		/* 161 */if (!Options.ownBook)
-			/* 162 */return null;
-		/* 163 */Long z = new Long(position.getZobrist());
-		/* 164 */if (openings.containsKey(z))
-		/*     */{
-			/* 166 */Move m = (Move) openings.get(z);
-			/* 167 */return m;
-			/*     */}
-		/*     */
-		/* 170 */return null;
-		/*     */}
+	
+	static Move checkOpeningBook(Position position)
+	{
+		if (Options.DEBUG)
+			System.out.println("debug: EdenBrain.checkOpeningBook()");
+		if (!Options.ownBook)
+			return null;
+		Long z = new Long(position.getZobrist());
+		if (openings.containsKey(z))
+		{
+			Move m = (Move) openings.get(z);
+			return m;
+			}
+		
+		return null;
+		}
 
-	/*     */
-	/*     */
-	/* 174 */static Map openings = new HashMap();
-	/*     */static boolean openingsLoaded;
-	/*     */
+	
+	
+	static Map openings = new HashMap();
+	static boolean openingsLoaded;
+	
 }
 
 /*
