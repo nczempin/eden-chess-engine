@@ -1,0 +1,23 @@
+
+lsquid:S3008_"PRename this field "DEBUG" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(îéÒ¡ÿÿÿÿÿ
+gsquid:S1450`"PRemove the "c" field and declare it as a local variable in the relevant methods.(ó¤Ç
+Gsquid:S1444_"+Make this "public static DEBUG" field final(îéÒ¡ÿÿÿÿÿ
+Bsquid:S1444a"+Make this "public static btime" field final(®”×’
+Asquid:S1444b"*Make this "public static binc" field final(ñéÖ¿
+Fsquid:S1444c"/Make this "public static timeSpent" field final(î™¢·
+Msquid:S1444d"7Make this "public static timeToNextControl" field final(›™¯4
+Jsquid:S1444e"4Make this "public static currmovenumber" field final(¸ê­
+Msquid:S1444f"1Make this "public static currentmove" field final(®êó£ùÿÿÿÿ
+Jsquid:S1444g".Make this "public static multiPvs" field final(„æô“úÿÿÿÿ
+Osquid:S1444j"3Make this "public static useQuiescence" field final(óªŞÿÿÿÿÿ
+„"squid:ClassVariableVisibilityCheck_"QMake DEBUG a static final constant or non-public and provide accessors if needed.(îéÒ¡ÿÿÿÿÿ
+"squid:ClassVariableVisibilityChecka"QMake btime a static final constant or non-public and provide accessors if needed.(®”×’
+~"squid:ClassVariableVisibilityCheckb"PMake binc a static final constant or non-public and provide accessors if needed.(ñéÖ¿
+ƒ"squid:ClassVariableVisibilityCheckc"UMake timeSpent a static final constant or non-public and provide accessors if needed.(î™¢·
+Š"squid:ClassVariableVisibilityCheckd"]Make timeToNextControl a static final constant or non-public and provide accessors if needed.(›™¯4
+‡"squid:ClassVariableVisibilityChecke"ZMake currmovenumber a static final constant or non-public and provide accessors if needed.(¸ê­
+Š"squid:ClassVariableVisibilityCheckf"WMake currentmove a static final constant or non-public and provide accessors if needed.(®êó£ùÿÿÿÿ
+‡"squid:ClassVariableVisibilityCheckg"TMake multiPvs a static final constant or non-public and provide accessors if needed.(„æô“úÿÿÿÿ
+Œ"squid:ClassVariableVisibilityCheckj"YMake useQuiescence a static final constant or non-public and provide accessors if needed.(óªŞÿÿÿÿÿ
+9squid:S2386g"Make this member "protected".(„æô“úÿÿÿÿ
+Zsquid:UselessImportCheck"6Remove this unused import 'de.czempin.chess.Protocol'.(²ãƒÉ
