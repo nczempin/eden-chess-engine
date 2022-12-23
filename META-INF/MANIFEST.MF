@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: de.czempin.chess
-Sealed: true
-Main-Class: de.czempin.chess.eden.Eden
-
