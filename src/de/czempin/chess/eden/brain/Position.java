@@ -3297,7 +3297,7 @@ public class Position {
 		this.castleShortWhite = (fenCastling.indexOf('K') != -1);
 		this.castleLongWhite = (fenCastling.indexOf('Q') != -1);
 		this.castleShortBlack = (fenCastling.indexOf('k') != -1);
-		this.castleLongBlack = (fenCastling.indexOf('k') != -1);
+		this.castleLongBlack = (fenCastling.indexOf('q') != -1);
 		String fenEnPassant = fenFields[3];
 		if (fenEnPassant.equals("-")) {
 			this.enPassantSquare = 0;
