@@ -7,6 +7,8 @@
    protected Brain brain;
    public static String brainMove;
    static Thread printInfoThread;
+   protected volatile boolean stopRequested = false;
+   protected long movetime = -1L;
    
    public boolean isSynchronous() { return Options.synchronous; }
    
@@ -63,6 +65,7 @@
    
    public void startBrain() {
      stopBrain();
+     this.stopRequested = false;
      brainThread = new Thread()
      {
        public void run() {
@@ -75,47 +78,60 @@
          String move = AbstractEngine.this.brain.move();
          AbstractEngine.brainMove = move;
          String moveString = AbstractEngine.printMove(move);
-         System.out.println(moveString);
- 
+         synchronized (System.out) {
+           System.out.println(moveString);
+           System.out.flush();
+         }
+         Thread infoThread = AbstractEngine.printInfoThread;
+         if (infoThread != null) {
+           infoThread.interrupt();
+         }
        }
-       
- 
- 
      };
      brainThread.start();
      printInfoThread = new Thread()
      {
        public void run() {
-         while (AbstractEngine.brainThread.isAlive()) {
-           Options.protocol.printInfo();
+         while (!AbstractEngine.this.stopRequested) {
            try {
              Thread.sleep(1000L);
            } catch (InterruptedException e) {
-             e.printStackTrace();
+             break;
            }
-           
+           Thread bt = AbstractEngine.brainThread;
+           if ((bt == null) || (!bt.isAlive()) || (AbstractEngine.this.stopRequested)) {
+             break;
+           }
+           synchronized (System.out) {
+             Options.protocol.printInfo();
+             System.out.flush();
+           }
          }
-         
        }
-       
- 
      };
+     printInfoThread.setDaemon(true);
      printInfoThread.start();
    }
    
    public void stopBrain()
    {
-     if ((brainThread != null) && (brainThread.isAlive())) {
-       String move = this.brain.getBestMoveSoFar();
-       String toPrint; if (move == null) {
-         toPrint = printMove(null);
-       } else
-         toPrint = printMove(move);
-       System.out.println(toPrint);
-       brainThread.stop();
+     this.stopRequested = true;
+     if ((printInfoThread != null) && (printInfoThread.isAlive())) {
+       printInfoThread.interrupt();
+       try {
+         printInfoThread.join(500L);
+       } catch (InterruptedException e) {
+         Thread.currentThread().interrupt();
+       }
      }
-     if ((printInfoThread != null) && (printInfoThread.isAlive()))
-       printInfoThread.stop();
+     if ((brainThread != null) && (brainThread.isAlive())) {
+       brainThread.interrupt();
+       try {
+         brainThread.join(2000L);
+       } catch (InterruptedException e) {
+         Thread.currentThread().interrupt();
+       }
+     }
    }
    
    static String printMove(String move) {

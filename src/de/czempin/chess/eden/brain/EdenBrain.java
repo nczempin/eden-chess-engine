@@ -46,7 +46,8 @@ Position nextPos;
        Info.ab_nodes += 1;
        nextPos = Position.createPosition(position, move);
      } catch (ThreeRepetitionsAB e) {
-       System.out.println("debug: three repetitions!");
+       if (Options.DEBUG)
+         System.out.println("debug: three repetitions!");
        return 0; }
      if ((!justExtended) && (Options.useCheckExtensions) && (checkExtensions < 4) && (Info.idDepth > 4) && (nextPos.isReceivingCheck()))
        return checkExtension(depth, extension, position, move, originalAlpha, beta, upPv, checkExtensions, true);
@@ -99,11 +100,11 @@ Position nextPos;
              }
              moveStack.push(hashMove);
              v = alphabeta(depth + 1, extension, nextPos, hashMove, -beta, -alpha, downPv, checkExtensions, false);
-             assert (v < 99999);
-             
-             assert (v > -99999);
-             
              moveStack.pop();
+             if (timeIsUp) {
+               kingCapture = false;
+               return 0;
+             }
              if (kingCapture) {
                illegalCount += 1;
                hashMove = null;
@@ -111,17 +112,19 @@ Position nextPos;
              } else {
                loopCount++;
                value = v;
+               if (value >= beta) {
+                 Info.hashCutoffs += 1;
+                 retVal = -beta;
+                 return retVal;
+               }
+               if (value > alpha) {
+                 alpha = value;
+                 upPv.clear();
+                 upPv.add(hashMove);
+                 upPv.addAll(downPv);
+               }
+               bestMove = hashMove;
              }
-             if (value >= beta) {
-               Info.hashCutoffs += 1;
-               retVal = -beta;
-               return retVal;
-             }
-             alpha = value;
-             upPv.clear();
-             upPv.add(hashMove);
-             upPv.addAll(downPv);
-             bestMove = hashMove;
            }
          }
        }
@@ -166,6 +169,10 @@ Position nextPos;
          Vector downPv = new Vector();
          v = alphabeta(depth + 1, extension, nextPos, newMove, -beta, -alpha, downPv, checkExtensions, false);
          moveStack.pop();
+         if (timeIsUp) {
+           kingCapture = false;
+           return 0;
+         }
          if (kingCapture) {
            illegalCount += 1;
            markForDelete.add(newMove);
@@ -209,6 +216,7 @@ Position nextPos;
        while (itx.hasNext()) {
          Move m = (Move)itx.next();
          if (m.getText().equals(killerMove1.getText())) {
+           killerMove1 = m;
            killerIsLegal = true;
            break;
          }
@@ -217,6 +225,7 @@ Position nextPos;
          for (itx = deferredMoves.iterator(); itx.hasNext();) {
            Move m = (Move)itx.next();
            if (m.getText().equals(killerMove1.getText())) {
+             killerMove1 = m;
              killerIsLegal = true;
              break;
            }
@@ -229,6 +238,10 @@ Position nextPos;
          Vector downPv = new Vector();
          value = alphabeta(depth + 1, extension, nextPos, killerMove1, -beta, -alpha, downPv, checkExtensions, false);
          moveStack.pop();
+         if (timeIsUp) {
+           kingCapture = false;
+           return 0;
+         }
          if (kingCapture) {
            illegalCount += 1;
            killerMove1 = null;
@@ -246,6 +259,7 @@ Position nextPos;
              bestMove = killerMove1;
            if (value > alpha) {
              alpha = value;
+             bestMove = killerMove1;
              upPv.clear();
              upPv.add(killerMove1);
              upPv.addAll(downPv);
@@ -260,6 +274,7 @@ Position nextPos;
        while (itx.hasNext()) {
          Move m = (Move)itx.next();
          if (m.getText().equals(killerMove2.getText())) {
+           killerMove2 = m;
            killerIsLegal = true;
            break;
          }
@@ -268,6 +283,7 @@ Position nextPos;
          for (itx = deferredMoves.iterator(); itx.hasNext();) {
            Move m = (Move)itx.next();
            if (m.getText().equals(killerMove2.getText())) {
+             killerMove2 = m;
              killerIsLegal = true;
              break;
            }
@@ -280,6 +296,10 @@ Position nextPos;
          Vector downPv = new Vector();
          value = alphabeta(depth + 1, extension, nextPos, killerMove2, -beta, -alpha, downPv, checkExtensions, false);
          moveStack.pop();
+         if (timeIsUp) {
+           kingCapture = false;
+           return 0;
+         }
          if (kingCapture) {
            illegalCount += 1;
            killerMove2 = null;
@@ -297,6 +317,7 @@ Position nextPos;
            }
            if (value > alpha) {
              alpha = value;
+             bestMove = killerMove2;
              upPv.clear();
              upPv.add(killerMove2);
              upPv.addAll(downPv);
@@ -323,11 +344,11 @@ Position nextPos;
          moveStack.push(newMove);
          Vector downPv = new Vector();
          v = alphabeta(depth + 1, extension, nextPos, newMove, -beta, -alpha, downPv, checkExtensions, false);
-         assert (v < 99999);
-         
-         assert (v != -99999);
-         
          moveStack.pop();
+         if (timeIsUp) {
+           kingCapture = false;
+           return 0;
+         }
          if (kingCapture) {
            illegalCount += 1;
            markForDelete.add(newMove);
@@ -337,8 +358,6 @@ Position nextPos;
              bestMove = newMove;
            loopCount++;
            value = v;
-           assert (value < 99999);
-           
            loop2++;
            if (value >= beta) {
              Info.betaCutoffs += 1;
@@ -389,6 +408,10 @@ Position nextPos;
          Vector downPv = new Vector();
          v = alphabeta(depth + 1, extension, nextPos, newMove, -beta, -alpha, downPv, checkExtensions, false);
          moveStack.pop();
+         if (timeIsUp) {
+           kingCapture = false;
+           return 0;
+         }
          if (kingCapture) {
            illegalCount += 1;
            markForDelete.add(newMove);
@@ -474,12 +497,11 @@ Position nextPos;
      Vector downPv = new Vector();
      extension += 1.501D;
      int value = alphabeta(depth + 1, extension, nextPos, onlyMove, -beta, -originalAlpha, downPv, checkExtensions, false);
-     assert (value < 99999);
-     
-     assert (value > -99999);
-     
- 
      moveStack.pop();
+     if ((kingCapture) || (timeIsUp)) {
+       kingCapture = false;
+       return originalValue;
+     }
      upPv.clear();
      upPv.add(onlyMove);
      upPv.addAll(downPv);
@@ -488,13 +510,7 @@ Position nextPos;
    
    public long calculateTimePerMove(long t, long inc)
    {
-     if ((t == 0L) && (inc == 0L))
-       return -1L;
-     int slice = this.engine.getMovestogo() + 1;
-     long retVal = (t - inc) / slice + inc - 500L;
-     if (retVal < 100L)
-       retVal = 100L;
-     return retVal;
+     return this.engine.calculateTimePerMove(t, inc);
    }
    
    static Long getZobrist(Position sp) {
@@ -538,16 +554,17 @@ Position nextPos;
      Info.hashHitCount = 0;
      Info.hashMiss = 0;
      Info.hashDepthMiss = 0;
-     System.gc();
      Info.searchtime = System.currentTimeMillis();
      Eden.calculateTimePerMove();
      Move move = analyze();
      if (move == null)
-       return "Can't move!\n";
+       return "0000";
      try {
+       withinAlphabeta = false;
        position.makeMove(move);
      } catch (ThreeRepetitionsAB e) {
-       e.printStackTrace();
+       if (Options.DEBUG)
+         e.printStackTrace();
      }
      if (Options.DEBUG)
        System.out.println("debug: returning move: " + move);
@@ -564,8 +581,10 @@ Position nextPos;
      }
      
      Variation v2 = new Variation(move.getText(), variationStrings, value, depth);
-     Eden.multiPvs.clear();
-     Eden.multiPvs.put(key, v2);
+     synchronized (Eden.multiPvs) {
+       Eden.multiPvs.clear();
+       Eden.multiPvs.put(key, v2);
+     }
    }
    
    public String extractVariationString(Vector variation) {
@@ -594,7 +613,8 @@ String pv;
          Info.qs_nodes += 1L;
          nextPos = Position.createPosition(position, move);
        } catch (ThreeRepetitionsAB e) {
-         System.err.println("three repetitions. what to do?");
+         if (Options.DEBUG)
+           System.err.println("three repetitions. what to do?");
          return 0;
        }
      int v = nextPos.getValue();
@@ -620,6 +640,11 @@ String pv;
          moveStack.push(newMove);
          Vector downPv = new Vector();
          int value = quiescence_alphabeta(depth + 1, nextPos, newMove, -beta, -alpha, downPv, null);
+         if (timeIsUp) {
+           moveStack.pop();
+           kingCapture = false;
+           return 0;
+         }
          if (kingCapture) {
            illegalCount += 1;
            moveStack.pop();
@@ -677,6 +702,8 @@ String pv;
    }
    
    private boolean timeUp() {
+     if (Info.idDepth <= 1)
+       return false;
      return this.engine.timeUp();
    }
    
@@ -760,7 +787,8 @@ String pv;
          return bestMove;
        }
        if (size == 0) {
-         System.out.println("debug: mate or stalemate!");
+         if (Options.DEBUG)
+           System.out.println("debug: mate or stalemate!");
          return null;
        }
        if (oldMovesVector.isEmpty())
@@ -773,13 +801,17 @@ String pv;
          Eden.printInfo();
          moveStack.clear();
          moveStack.push(move);
+         alphaBetaDraws.clear();
          alphaBetaDraws.putAll(threeDrawsTable);
          Vector pvec = new Vector();
          int value = alphabeta(1, 0.0D, position, move, -99999, -bestValue, pvec, 0, false);
-         assert (value < 99999);
-         
-         assert (value > -99999);
-         
+         moveStack.clear();
+         if (timeIsUp)
+           break;
+         if (kingCapture) {
+           kingCapture = false;
+           continue;
+         }
          switch (Math.abs(value)) {
          case 666660: 
          case 666661: 
@@ -789,11 +821,8 @@ String pv;
          case 666665: 
          case 666666: 
          case 666667: 
-           throw new IllegalStateException("invalid value: " + value);
+           continue;
          }
-         moveStack.clear();
-         if (timeIsUp)
-           break;
          move.value = value;
          nextRoundOrderedMoves.add(move);
          if ((value > bestValue) || (move.equals(bestMove))) {
@@ -835,22 +864,32 @@ String pv;
        if (Options.DEBUG)
          System.out.println("***End of Iteration " + i + "***");
      } while ((!timeUp()) && (!exit));
-     System.gc();
      if (bestMove != null) {
        return bestMove;
      }
-     return oldBestMove;
+     if (oldBestMove != null) {
+       return oldBestMove;
+     }
+     SortedSet fallback = position.generateLegalMoves();
+     if ((fallback != null) && (!fallback.isEmpty())) {
+       return (Move)fallback.first();
+     }
+     return null;
    }
    
    public String getBestMoveSoFar() {
      if (Options.DEBUG)
        System.out.println("debug: multiPVs: " + Eden.multiPvs);
-     String bestMove = (String)Eden.multiPvs.keySet().iterator().next();
-     return bestMove;
+     synchronized (Eden.multiPvs) {
+       if (Eden.multiPvs.isEmpty())
+         return null;
+       String bestMove = (String)Eden.multiPvs.keySet().iterator().next();
+       return bestMove;
+     }
    }
    
    private static void addToKillers(int depth, Move potentialKiller) {
-     if (potentialKiller == null)
+     if ((potentialKiller == null) || (depth < 0) || (depth >= killerMoves1.length))
        return;
      KillerEntry k1 = killerMoves1[depth];
      if (k1 == null) {
@@ -885,7 +924,7 @@ String pv;
    }
    
    private static Move checkKillerMove1(int depth) {
-     if (!Options.useKiller)
+     if ((!Options.useKiller) || (depth < 0) || (depth >= killerMoves1.length))
        return null;
      KillerEntry k1 = killerMoves1[depth];
      if (k1 == null) {
@@ -898,7 +937,7 @@ String pv;
    
    private static Move checkKillerMove2(int depth)
    {
-     if (!Options.useKiller)
+     if ((!Options.useKiller) || (depth < 0) || (depth >= killerMoves2.length))
        return null;
      KillerEntry k2 = killerMoves2[depth];
      if (k2 == null) {
@@ -948,11 +987,13 @@ String pv;
    }
    
    public void setWbInc(int i) {
-     throw new IllegalStateException("TODO");
+     if (this.engine != null)
+       this.engine.setWbInc(i);
    }
    
    public void setWbTime(int i) {
-     throw new IllegalStateException("TODO");
+     if (this.engine != null)
+       this.engine.setWbTime(i);
    }
    
    public Boolean onMove() {

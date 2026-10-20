@@ -13,11 +13,6 @@
    
    public String execute(String parameters) {
      System.out.println("Thanks for playing with " + parameters + ". Good-bye until next time!");
-     try {
-       Thread.sleep(1000L);
-     } catch (InterruptedException e) {
-       e.printStackTrace();
-     }
      System.out.flush();
      System.exit(0);
      return null;

@@ -43,7 +43,7 @@ public class Position {
 
 	private int[] kingEndgameSquareValuesKBNKDark = { 0, 0, -5, -8, -15, -20, -30, -40, -50, 0, 0, -5, 1, 2, 3, 3, 2, 1, -40, 0, 0, -8, 2, 3, 4, 4, 3, 2, -30,
 			0, 0, -15, 3, 4, 5, 5, 4, 3, -20, 0, 0, -20, 3, 4, 5, 5, 4, 3, -15, 0, 0, -30, 2, 3, 4, 4, 3, 2, -8, 0, 0, -40, 1, 2, 3, 3, 2, 1, -5, 0, 0, -50,
-			-40, -30, -20, -15, -8, -5 };
+			-40, -30, -20, -15, -8, -5, 0 };
 
 	static int[] knightSquareValues = { 0, -31, -4, -4, -4, -4, -4, -8, -31, 0, 0, -9, -4, -2, -1, -2, -2, -4, -9, 0, 0, -5, 0, 3, 1, 1, 4, 0, -5, 0, 0, -4, 1,
 			2, 8, 8, 2, 1, -5, 0, 0, -4, 1, 2, 8, 8, 2, 1, -5, 0, 0, -5, 0, 3, 1, 1, 4, 0, -5, 0, 0, -9, -4, -2, -1, -2, -2, -4, -9, 0, 0, -31, -4, -4, -4, -4,
@@ -801,6 +801,9 @@ public class Position {
 			}
 		}
 
+		if (lightSquaredBishop == null) {
+			return;
+		}
 		if (!lightSquaredBishop.booleanValue()) {
 			this.kingEndgameSquareValues = this.kingEndgameSquareValuesKBNKLight;
 		} else {
@@ -820,6 +823,23 @@ public class Position {
 		for (int i = 0; i < 89; i++) {
 			this.board[i] = 0;
 		}
+		if (this.whitePieces != null) {
+			this.whitePieces.clear();
+		}
+		if (this.blackPieces != null) {
+			this.blackPieces.clear();
+		}
+		this.whiteKing = -1;
+		this.blackKing = -1;
+		this.zobrist = 0L;
+		this.pawnZobrist = null;
+		this.pzCache = null;
+		this.legalMoves = null;
+		this.isGivingCheck = null;
+		this.isReceivingCheck = null;
+		this.isEndGame = null;
+		this.hasCastledWhite = false;
+		this.hasCastledBlack = false;
 	}
 
 	public void clearEnPassantCapture(Move move, int[] board) {
@@ -834,6 +854,9 @@ public class Position {
 			this.whitePieces.remove(new Integer(move.to + 10));
 		}
 		this.zobrist ^= zobi;
+		if (this.pawnZobrist != null) {
+			this.pawnZobrist = Long.valueOf(this.pawnZobrist.longValue() ^ zobi);
+		}
 	}
 
 	private PieceCount countBlackPieces() {
@@ -2864,7 +2887,7 @@ public class Position {
 		long incrementalZobrist = updatePawnZobristForMove(move, pz);
 		this.pawnZobrist = new Long(incrementalZobrist);
 		boolean updateDrawCount = false;
-		if ((move.capturedPiece != 0) || (Math.abs(EdenBrain.position.board[move.from]) == 1))
+		if ((move.capturedPiece != 0) || (Math.abs(this.board[move.from]) == 1))
 			updateDrawCount = true;
 		this.isGivingCheck = null;
 		this.legalMoves = null;
@@ -2956,8 +2979,6 @@ public class Position {
 				if (EdenBrain.threeDrawsTable.containsKey(zobi)) {
 					Integer count = (Integer) EdenBrain.threeDrawsTable.get(zobi);
 					EdenBrain.threeDrawsTable.remove(zobi);
-					if (count.intValue() >= 2)
-						throw new IllegalStateException("three-fold repetition!");
 					count = new Integer(count.intValue() + 1);
 					EdenBrain.threeDrawsTable.put(zobi, count);
 				} else {
@@ -2991,7 +3012,7 @@ public class Position {
 
 	public void makeMove(String moveString) throws ThreeRepetitionsAB {
 		Move m = Move.create(this, moveString);
-		makeMove(m.from, m.to, m.capturedPiece);
+		makeMove(m.from, m.to, m.promotedTo);
 		this.isGivingCheck = null;
 		this.isReceivingCheck = null;
 	}
@@ -3175,7 +3196,7 @@ public class Position {
 
 	private boolean onFile(int moveFrom, int kingPosition) {
 		int diff = moveFrom - kingPosition;
-		return diff / 10 == 0;
+		return diff % 10 == 0;
 	}
 
 	public Boolean onMove() {
@@ -3184,7 +3205,7 @@ public class Position {
 
 	private boolean onRank(int moveFrom, int kingPosition) {
 		int col1 = moveFrom / 10;
-		int col2 = moveFrom / 10;
+		int col2 = kingPosition / 10;
 		return col1 == col2;
 	}
 
@@ -3226,35 +3247,8 @@ public class Position {
 			Move move = (Move) it.next();
 			Info.ensureLegalNodes += 1;
 			Position nextPos = createTestPosition(this, move);
-			if (isReceivingCheck()) {
-				if (nextPos.isGivingCheck()) {
-					markForDelete.add(move);
-				}
-			} else {
-				int movingPiece = Math.abs(this.board[move.from]);
-				switch (movingPiece) {
-				default:
-					break;
-
-				case 6:
-					if (nextPos.isGivingCheck())
-						markForDelete.add(move);
-					break;
-
-				case 1:
-
-				case 2:
-
-				case 3:
-
-				case 4:
-
-				case 5:
-					if (nextPos.isGivingCheckNonKingMoving(move.from)) {
-						markForDelete.add(move);
-					}
-					break;
-				}
+			if (nextPos.isGivingCheck()) {
+				markForDelete.add(move);
 			}
 		}
 		moves.removeAll(markForDelete);

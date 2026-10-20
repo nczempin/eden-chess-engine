@@ -33,6 +33,32 @@ import java.util.Map;
 
 public class OpeningBook
 {
+	private static BufferedReader openBookReader(String fileName) throws FileNotFoundException {
+		File f = new File(fileName);
+		if (f.exists()) {
+			return new BufferedReader(new FileReader(f));
+		}
+		try {
+			java.security.CodeSource cs = OpeningBook.class.getProtectionDomain().getCodeSource();
+			if (cs != null && cs.getLocation() != null) {
+				File jarFile = new File(cs.getLocation().toURI());
+				File dir = jarFile.isDirectory() ? jarFile : jarFile.getParentFile();
+				if (dir != null) {
+					File sibling = new File(dir, fileName);
+					if (sibling.exists()) {
+						return new BufferedReader(new FileReader(sibling));
+					}
+				}
+			}
+		} catch (Exception ignored) {
+		}
+		java.io.InputStream is = OpeningBook.class.getResourceAsStream("/" + fileName);
+		if (is != null) {
+			return new BufferedReader(new java.io.InputStreamReader(is));
+		}
+		return null;
+	}
+
 	static void prepareOpeningBook()
 	{
 		if (!Options.ownBook)
@@ -46,36 +72,34 @@ public class OpeningBook
 		}
 		try {
 			final String bbFileName = "bookBlack.txt";
-			File bbFile = new File(bbFileName);
-			if (bbFile.exists()) {
-				final FileReader bb = new FileReader(bbFile);
-				BufferedReader br = new BufferedReader(bb);
+			BufferedReader br = openBookReader(bbFileName);
+			if (br != null) {
 				if (Options.DEBUG)
 					System.out.println("debug: black openings...");
 				fillBlackOpenings(br);
+				br.close();
 			} else {
 				if (Options.DEBUG)
 					System.out.println("warning: opening book file '" + bbFileName + "' not found");
 
 			}
 			final String wbFilename = "bookWhite.txt";
-			File wbFile = new File(wbFilename);
-			if (wbFile.exists()) {
-				final FileReader wb = new FileReader(wbFile);
-				BufferedReader wr = new BufferedReader(wb);
+			BufferedReader wr = openBookReader(wbFilename);
+			if (wr != null) {
 				if (Options.DEBUG)
 					System.out.println("debug: white openings...");
 				fillWhiteOpenings(wr);
+				wr.close();
 			}
 			int positionCount = openings.size();
 			if (Options.DEBUG)
 				System.out.println("debug: Opening book has " + positionCount + " positions.");
 			openingsLoaded = true;
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 			return;
 		} catch (IOException e) {
-			e.printStackTrace();
+			if (Options.DEBUG)
+				e.printStackTrace();
 		}
 	}
 
@@ -84,17 +108,20 @@ public class OpeningBook
 			String line = br.readLine();
 			if (line == null)
 				break;
-			if (!line.startsWith("#")) {
+			line = line.trim();
+			if (!line.isEmpty() && !line.startsWith("#")) {
 				try {
 					Position p = new Position();
 					p.setToStartPosition();
-					String[] movePairs = line.split(" ");
+					String[] movePairs = line.split("\\s+");
 					for (int j = 0; j < movePairs.length; j++) {
 						String[] ms = movePairs[j].split("\\.");
 						if (ms.length == 2) {
-							String ms1 = ms[0];
-							String ms2 = ms[1];
-							bookAdd(p, ms1, ms2);
+							String ms1 = ms[0].trim();
+							String ms2 = ms[1].trim();
+							if (!bookAdd(p, ms1, ms2)) {
+								break;
+							}
 						}
 						}
 					
@@ -102,22 +129,32 @@ public class OpeningBook
 					}
 				catch (ThreeRepetitionsAB e)
 				{
-					e.printStackTrace();
+					EdenBrain.threeDrawsTable.clear();
 					}
 				}
 			}
 		}
 
 	
-	private static void bookAdd(Position p, String moveString1, String moveString2) throws ThreeRepetitionsAB
+	private static boolean bookAdd(Position p, String moveString1, String moveString2) throws ThreeRepetitionsAB
 	{
 		if ("".equals(moveString1)) {
 			p.setToStartPosition();
-			} else
-			p.makeMove(moveString1);
-		Move m = enterIntoBook(p, moveString2);
-		p.makeMove(m);
+		} else {
+			Move m1 = Move.create(p, moveString1);
+			if (m1 == null || !p.isLegal(m1.from, m1.to, m1.promotedTo)) {
+				return false;
+			}
+			p.makeMove(m1);
 		}
+		Move m = Move.create(p, moveString2);
+		if (m == null || !p.isLegal(m.from, m.to, m.promotedTo)) {
+			return false;
+		}
+		enterIntoBook(p, moveString2);
+		p.makeMove(m);
+		return true;
+	}
 
 	
 	static void fillWhiteOpenings(BufferedReader br)
@@ -128,39 +165,46 @@ public class OpeningBook
 			String line = br.readLine();
 			if (line == null)
 				break;
-			if (!line.startsWith("#")) {
+			line = line.trim();
+			if (!line.isEmpty() && !line.startsWith("#")) {
 				try
 				{
 					Position p = new Position();
+					p.setToStartPosition();
 					String[] movePairs = line.split("\\.");
 					for (int j = 0; j < movePairs.length; j++)
 					{
-						String[] ms = movePairs[j].split(" ");
+						String pair = movePairs[j].trim();
+						if (pair.isEmpty())
+							continue;
+						String[] ms = pair.split("\\s+");
 						
 						String ms2;
 						String ms1;
 						if (ms.length == 1)
 						{
 							ms1 = "";
-							ms2 = ms[0];
+							ms2 = ms[0].trim();
 							} else {
 							if (ms.length == 2)
 							{
-								ms1 = ms[0];
-								ms2 = ms[1];
+								ms1 = ms[0].trim();
+								ms2 = ms[1].trim();
 								}
 							else {
-								throw new IllegalArgumentException("Opening Book Format invalid: " + movePairs + "-->" + ms);
+								break;
 							}
 						}
-						bookAdd(p, ms1, ms2);
+						if (!bookAdd(p, ms1, ms2)) {
+							break;
+						}
 						}
 					
 					EdenBrain.threeDrawsTable.clear();
 					}
 				catch (ThreeRepetitionsAB e)
 				{
-					e.printStackTrace();
+					EdenBrain.threeDrawsTable.clear();
 					}
 				}
 			}
@@ -182,11 +226,13 @@ public class OpeningBook
 			System.out.println("debug: EdenBrain.checkOpeningBook()");
 		if (!Options.ownBook)
 			return null;
-		Long z = new Long(position.getZobrist());
+		Long z = Long.valueOf(position.getZobrist());
 		if (openings.containsKey(z))
 		{
 			Move m = (Move) openings.get(z);
-			return m;
+			if (m != null && position.isLegal(m.from, m.to, m.promotedTo)) {
+				return new Move(position, m.from, m.to, m.promotedTo);
+			}
 			}
 		
 		return null;

@@ -18,12 +18,7 @@
    
    public String execute(String parameters)
    {
-     try {
-       Thread.sleep(1000L);
-     } catch (InterruptedException e) {
-       e.printStackTrace();
-     }
-     return "\nreadyok\n";
+     return "readyok\n";
    }
    
    protected String commandString() {

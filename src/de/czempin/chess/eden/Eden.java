@@ -69,12 +69,17 @@
    
    public long calculateTimePerMove(long t, long inc)
    {
-     if ((t == 0L) && (inc == 0L))
+     if ((t <= 0L) && (inc <= 0L))
        return -1L;
-     int slice = getMovestogo() + 1;
-     long retVal = (t - inc) / slice + inc - 500L;
-     if (retVal < 100L)
-       retVal = 100L;
+     long overhead = Math.min(50L, Math.max(10L, t / 5L));
+     long available = Math.max(5L, t - overhead);
+     int slice = Math.max(2, getMovestogo() + 1);
+     long retVal = available / slice + (inc * 3L) / 4L;
+     long maxAllowed = Math.max(5L, available / 2L);
+     if (retVal > maxAllowed)
+       retVal = maxAllowed;
+     if (retVal < 5L)
+       retVal = 5L;
      return retVal;
    }
    
@@ -85,6 +90,8 @@
    
    public boolean timeUp()
    {
+     if (this.stopRequested)
+       return true;
      if (this.timePerMove <= 0L)
        return false;
      Info.time = System.currentTimeMillis() - Info.searchtime;

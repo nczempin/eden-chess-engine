@@ -59,6 +59,9 @@
    }
    
    public void calculateTimePerMove() {
+     if ((this.engine.getWtime() <= 0L) && (this.engine.getBtime() <= 0L) && (this.engine.getWinc() <= 0L) && (this.engine.getBinc() <= 0L)) {
+       return;
+     }
      long tpm;
      if (this.engine.whiteToMove()) {
        tpm = this.engine.calculateTimePerMove(this.engine.getWtime(), this.engine.getWinc());
