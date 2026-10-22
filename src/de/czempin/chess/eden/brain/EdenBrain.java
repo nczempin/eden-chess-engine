@@ -40,7 +40,8 @@
        timeIsUp = true;
        return 0;
      }
-Position nextPos;
+     boolean trackedDraw = (move.capturedPiece == 0) && (Math.abs(position.board[move.from]) != 1);
+     Position nextPos;
      try
      {
        Info.ab_nodes += 1;
@@ -49,6 +50,7 @@ Position nextPos;
        if (Options.DEBUG)
          System.out.println("debug: three repetitions!");
        return 0; }
+     try {
      if ((!justExtended) && (Options.useCheckExtensions) && (checkExtensions < 4) && (Info.idDepth > 4) && (nextPos.isReceivingCheck()))
        return checkExtension(depth, extension, position, move, originalAlpha, beta, upPv, checkExtensions, true);
      Set markForDelete = new java.util.HashSet();
@@ -64,7 +66,7 @@ Position nextPos;
        int validFlag = te.getValidFlag().getNr();
        int hashValue = te.getValue();
        if (hashMove == null) {
-         if ((validFlag == 2) && (hashValue < beta)) {
+         if ((validFlag == 2) && (hashValue <= alpha)) {
            Info.hashCutoffs += 1;
            return -hashValue;
          }
@@ -76,25 +78,23 @@ Position nextPos;
            Vector downPv = new Vector();
            if (validFlag == 1) {
              Info.countValidFlag += 1;
-             loopCount++;
-             value = hashValue;
-             if (value >= beta) {
-               Info.hashCutoffs += 1;
-               retVal = -beta;
-               return retVal;
+             Info.hashCutoffs += 1;
+             if (hashValue >= beta) {
+               return -beta;
              }
-             alpha = value;
-             upPv.clear();
-             upPv.add(hashMove);
-             upPv.addAll(downPv);
-             bestMove = hashMove;
+             if (hashValue > alpha) {
+               upPv.clear();
+               upPv.add(hashMove);
+               return -hashValue;
+             }
+             return -alpha;
            } else {
              if (validFlag == 4) {
                if (hashValue >= beta) {
                  Info.hashCutoffs += 1;
                  return -hashValue;
                }
-             } else if ((validFlag == 2) && (hashValue < beta)) {
+             } else if ((validFlag == 2) && (hashValue <= alpha)) {
                Info.hashCutoffs += 1;
                return -hashValue;
              }
@@ -473,6 +473,11 @@ Position nextPos;
      addToKillers(depth, bestMove);
      nextPos.writeHashtable(bestMove, depth, extension, alpha, originalAlpha, beta);
      return -alpha;
+     } finally {
+       if (trackedDraw) {
+         decrementAlphaBetaDraw(nextPos.getZobrist());
+       }
+     }
    }
    
  
@@ -617,6 +622,11 @@ String pv;
            System.err.println("three repetitions. what to do?");
          return 0;
        }
+     if (nextPos.isGivingCheck()) {
+       kingCapture = true;
+       illegalCount += 1;
+       return -666663;
+     }
      int v = nextPos.getValue();
      if (v >= beta)
        return -beta;
@@ -698,7 +708,7 @@ String pv;
    }
    
    private static boolean shouldBeIgnored(Position nextPos, Move newMove, int capture, int capturing) {
-     return (capturing > capture) && ((capturing != 3) || (capture != 2)) && (!nextPos.enPrise(newMove));
+     return false;
    }
    
    private boolean timeUp() {
@@ -802,7 +812,6 @@ String pv;
          moveStack.clear();
          moveStack.push(move);
          alphaBetaDraws.clear();
-         alphaBetaDraws.putAll(threeDrawsTable);
          Vector pvec = new Vector();
          int value = alphabeta(1, 0.0D, position, move, -99999, -bestValue, pvec, 0, false);
          moveStack.clear();
@@ -910,7 +919,7 @@ String pv;
      }
      Move m2 = k2.getMove();
      if (potentialKiller.equals(m2)) {
-       k1.increment();
+       k2.increment();
        return;
      }
      int c1 = k1.getCount();
@@ -918,9 +927,10 @@ String pv;
      if (c1 > c2) {
        Info.killerAdds += 1;
        killerMoves2[depth] = new KillerEntry(potentialKiller);
+     } else {
+       Info.killerAdds += 1;
+       killerMoves1[depth] = new KillerEntry(potentialKiller);
      }
-     Info.killerAdds += 1;
-     killerMoves1[depth] = new KillerEntry(potentialKiller);
    }
    
    private static Move checkKillerMove1(int depth) {
@@ -1039,6 +1049,11 @@ String pv;
    private static int bestValue;
    
    static long enPassantZobrist = randomZobrist();
+   static long[] enPassantFileZobrist = new long[10];
+   static long castleShortWhiteZobrist = randomZobrist();
+   static long castleLongWhiteZobrist = randomZobrist();
+   static long castleShortBlackZobrist = randomZobrist();
+   static long castleLongBlackZobrist = randomZobrist();
    private static KillerEntry[] killerMoves1 = new KillerEntry[99];
    private static KillerEntry[] killerMoves2 = new KillerEntry[99];
    
@@ -1048,6 +1063,9 @@ String pv;
    static
    {
      transpositions = new HashMap(Options.MAX_TRANSPOSITIONS);
+     for (int f = 0; f < 10; f++) {
+       enPassantFileZobrist[f] = randomZobrist();
+     }
      zobrists = new long[2][6][89];
      
      Long randLong;
@@ -1066,13 +1084,43 @@ Set zob;
      }
    }
    
+   public static void decrementAlphaBetaDraw(long z) {
+     Long zobi = Long.valueOf(z);
+     Integer count = (Integer)alphaBetaDraws.get(zobi);
+     if (count != null) {
+       int next = count.intValue() - 1;
+       if (next <= 0) {
+         alphaBetaDraws.remove(zobi);
+       } else {
+         alphaBetaDraws.put(zobi, Integer.valueOf(next));
+       }
+     }
+   }
+
+   public static long perft(Position pos, int depth) {
+     if (depth <= 0) {
+       return 1L;
+     }
+     SortedSet moves = pos.generateLegalMoves();
+     if (depth == 1) {
+       return moves.size();
+     }
+     long nodes = 0L;
+     for (Iterator it = moves.iterator(); it.hasNext();) {
+       Move m = (Move)it.next();
+       Position next = Position.createTestPosition(pos, m);
+       nodes += perft(next, depth - 1);
+     }
+     return nodes;
+   }
+
    public static void initializeGo() {}
    
    public static void printInfo() {}
    
    public String getVersion()
    {
-     return "0.0.13";
+     return "0.0.14";
    }
  }
 

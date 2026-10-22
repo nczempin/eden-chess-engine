@@ -21,6 +21,13 @@
    
    public String execute(String parameters)
    {
+     int perftDepth = extractIntValue(parameters, "perft");
+     if (perftDepth > 0) {
+       long start = System.currentTimeMillis();
+       long nodes = de.czempin.chess.eden.brain.EdenBrain.perft(de.czempin.chess.eden.brain.EdenBrain.position, perftDepth);
+       long elapsed = Math.max(1L, System.currentTimeMillis() - start);
+       return "Nodes searched: " + nodes + " (" + elapsed + " ms)\n";
+     }
      int wtime = extractIntValue(parameters, "wtime");
      int btime = extractIntValue(parameters, "btime");
      int winc = extractIntValue(parameters, "winc");

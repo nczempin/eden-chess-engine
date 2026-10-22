@@ -266,8 +266,9 @@ public class Position {
 		}
 		if (from != kingHome)
 			return;
+		int friendlyRook = (p > 0) ? 4 : -4;
 		int pieceNextToKingR = position.board[(from + 1)];
-		if ((castlingShort) && (pieceNextToKingR == 0) && (position.board[(from + 2)] == 0)) {
+		if ((castlingShort) && (position.board[(from + 3)] == friendlyRook) && (pieceNextToKingR == 0) && (position.board[(from + 2)] == 0)) {
 			if (position.isReceivingCheck())
 				return;
 			Move testCastleThrough = new Move(position, fromSquare, from + 1);
@@ -276,7 +277,7 @@ public class Position {
 			if (!testPosition.isGivingCheckForCastling(from + 1))
 				moves.add(new Move(position, fromSquare, from + 2));
 		}
-		if ((castlingLong) && (Math.abs(position.board[(from - 1)]) == 0) && (position.board[(from - 2)] == 0) && (position.board[(from - 3)] == 0)) {
+		if ((castlingLong) && (position.board[(from - 4)] == friendlyRook) && (Math.abs(position.board[(from - 1)]) == 0) && (position.board[(from - 2)] == 0) && (position.board[(from - 3)] == 0)) {
 			if (position.isReceivingCheck())
 				return;
 			Move testCastleThrough = new Move(position, fromSquare, from - 1);
@@ -1975,7 +1976,7 @@ public class Position {
 			} else if ((square == 82) || (square == 81) || (square == 83)) {
 				if (this.board[73] != -1)
 					retValue -= 10;
-				if ((this.board[72] != -1) || (this.board[72] != -3)) {
+				if ((this.board[72] != -1) && (this.board[72] != -3)) {
 					retValue -= 10;
 					if (this.board[62] != -1)
 						retValue -= 10;
@@ -2299,7 +2300,15 @@ public class Position {
 		if ((this.onMove != null) && (this.onMove.equals(BLACK)))
 			grosserZobrist ^= EdenBrain.onMoveZobrist;
 		if (this.enPassantSquare != 0)
-			grosserZobrist ^= EdenBrain.enPassantZobrist;
+			grosserZobrist ^= EdenBrain.enPassantFileZobrist[this.enPassantSquare % 10];
+		if (this.castleShortWhite)
+			grosserZobrist ^= EdenBrain.castleShortWhiteZobrist;
+		if (this.castleLongWhite)
+			grosserZobrist ^= EdenBrain.castleLongWhiteZobrist;
+		if (this.castleShortBlack)
+			grosserZobrist ^= EdenBrain.castleShortBlackZobrist;
+		if (this.castleLongBlack)
+			grosserZobrist ^= EdenBrain.castleLongBlackZobrist;
 		this.zobrist = grosserZobrist;
 		return grosserZobrist;
 	}
@@ -2882,6 +2891,11 @@ public class Position {
 
 	void makeMove(Move move) throws ThreeRepetitionsAB {
 		long z = getZobrist();
+		int prevEP = this.enPassantSquare;
+		boolean prevCSW = this.castleShortWhite;
+		boolean prevCLW = this.castleLongWhite;
+		boolean prevCSB = this.castleShortBlack;
+		boolean prevCLB = this.castleLongBlack;
 		this.zobrist = updateZobristForMove(move, z);
 		long pz = getPawnZobrist().longValue();
 		long incrementalZobrist = updatePawnZobristForMove(move, pz);
@@ -2898,11 +2912,9 @@ public class Position {
 			clearEnPassantCapture(move, this.board);
 		if (this.enPassantSquare != 0) {
 			this.enPassantSquare = 0;
-			updateZobristEnPassant();
 		}
 		if ((movingPieceType == 1) && (Math.abs(move.to - move.from) == 20)) {
 			this.enPassantSquare = ((move.from + move.to) / 2);
-			updateZobristEnPassant();
 		}
 		if ((movingPieceType == 6) && (Math.abs(move.from - move.to) == 2)) {
 			int rookTo;
@@ -2969,44 +2981,44 @@ public class Position {
 		p = this.board[88];
 		if (p != -4)
 			this.castleShortBlack = false;
+		if (prevEP != 0)
+			this.zobrist ^= EdenBrain.enPassantFileZobrist[prevEP % 10];
+		if (this.enPassantSquare != 0)
+			this.zobrist ^= EdenBrain.enPassantFileZobrist[this.enPassantSquare % 10];
+		if (prevCSW != this.castleShortWhite)
+			this.zobrist ^= EdenBrain.castleShortWhiteZobrist;
+		if (prevCLW != this.castleLongWhite)
+			this.zobrist ^= EdenBrain.castleLongWhiteZobrist;
+		if (prevCSB != this.castleShortBlack)
+			this.zobrist ^= EdenBrain.castleShortBlackZobrist;
+		if (prevCLB != this.castleLongBlack)
+			this.zobrist ^= EdenBrain.castleLongBlackZobrist;
 		this.onMove = Boolean.valueOf(!this.onMove.booleanValue());
 		if (!EdenBrain.withinAlphabeta) {
 			if (updateDrawCount) {
 				EdenBrain.threeDrawsTable.clear();
 			} else {
 				long myZobrist = getZobrist();
-				Long zobi = new Long(myZobrist);
+				Long zobi = Long.valueOf(myZobrist);
 				if (EdenBrain.threeDrawsTable.containsKey(zobi)) {
 					Integer count = (Integer) EdenBrain.threeDrawsTable.get(zobi);
-					EdenBrain.threeDrawsTable.remove(zobi);
-					count = new Integer(count.intValue() + 1);
-					EdenBrain.threeDrawsTable.put(zobi, count);
+					EdenBrain.threeDrawsTable.put(zobi, Integer.valueOf(count.intValue() + 1));
 				} else {
-					Integer count = new Integer(1);
-					EdenBrain.threeDrawsTable.put(zobi, count);
+					EdenBrain.threeDrawsTable.put(zobi, Integer.valueOf(1));
 				}
 			}
-		} else if (updateDrawCount) {
-			EdenBrain.alphaBetaDraws.clear();
-		} else {
+		} else if (!updateDrawCount) {
 			long myZobrist = getZobrist();
-			Long zobi = new Long(myZobrist);
-			int total = 0;
-			if (EdenBrain.alphaBetaDraws.containsKey(zobi)) {
-				total += ((Integer) EdenBrain.alphaBetaDraws.get(zobi)).intValue();
-
-				if (EdenBrain.threeDrawsTable.containsKey(zobi)) {
-					total += ((Integer) EdenBrain.threeDrawsTable.get(zobi)).intValue();
-				} else {
-					Integer count = new Integer(1);
-					EdenBrain.alphaBetaDraws.put(zobi, count);
-				}
-				EdenBrain.alphaBetaDraws.remove(zobi);
-				if (total >= 2)
-					throw new ThreeRepetitionsAB("three-fold repetition!");
-				Integer count = new Integer(total + 1);
-				EdenBrain.alphaBetaDraws.put(zobi, count);
-			}
+			Long zobi = Long.valueOf(myZobrist);
+			int abCount = EdenBrain.alphaBetaDraws.containsKey(zobi)
+				? ((Integer) EdenBrain.alphaBetaDraws.get(zobi)).intValue()
+				: 0;
+			int gameCount = EdenBrain.threeDrawsTable.containsKey(zobi)
+				? ((Integer) EdenBrain.threeDrawsTable.get(zobi)).intValue()
+				: 0;
+			if (abCount + gameCount >= 2)
+				throw new ThreeRepetitionsAB("three-fold repetition!");
+			EdenBrain.alphaBetaDraws.put(zobi, Integer.valueOf(abCount + 1));
 		}
 	}
 
@@ -3439,7 +3451,7 @@ public class Position {
 		int sourceType = this.board[move.from];
 		long zoFrom = kleinerZobristEntfernen(move.from);
 		long zoKick = 0L;
-		if (move.capturedPiece != 0)
+		if ((move.capturedPiece != 0) && (this.board[move.to] != 0))
 			zoKick = kleinerZobristEntfernen(move.to);
 		long zoTo = kleinerZobristSetzen(sourceType, move.to);
 		if (move.promotedTo != 0) {

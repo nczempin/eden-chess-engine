@@ -39,6 +39,9 @@
      if (line.startsWith("go")) {
        return new UCIGoCommand(this.engine, line);
      }
+     if (line.startsWith("perft")) {
+       return new UCIGoCommand(this.engine, "go " + line);
+     }
      return de.czempin.chess.commands.UnknownCommand.getInstance();
    }
    

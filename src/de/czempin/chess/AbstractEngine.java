@@ -3,7 +3,7 @@
  import java.io.PrintStream;
  
  public abstract class AbstractEngine implements Engine {
-   static Thread brainThread;
+   public static Thread brainThread;
    protected Brain brain;
    public static String brainMove;
    static Thread printInfoThread;
