@@ -59,7 +59,7 @@ public class OpeningBook
 		return null;
 	}
 
-	static void prepareOpeningBook()
+	public static void prepareOpeningBook()
 	{
 		if (!Options.ownBook)
 		{

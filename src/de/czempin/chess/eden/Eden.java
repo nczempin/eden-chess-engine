@@ -71,11 +71,11 @@
    {
      if ((t <= 0L) && (inc <= 0L))
        return -1L;
-     long overhead = Math.min(80L, Math.max(25L, t / 4L));
+     long overhead = Math.min(120L, Math.max(35L, t / 3L));
      long available = Math.max(5L, t - overhead);
-     int slice = Math.max(4, getMovestogo() + 5);
-     long retVal = available / slice + (inc * 2L) / 3L;
-     long maxAllowed = Math.max(5L, available / 3L);
+     int slice = Math.max(10, getMovestogo() + 10);
+     long retVal = available / slice + inc / 2L;
+     long maxAllowed = Math.max(5L, available / 4L);
      if (retVal > maxAllowed)
        retVal = maxAllowed;
      if (retVal < 5L)

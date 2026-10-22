@@ -24,7 +24,8 @@
    
    protected String execute()
    {
-     this.engine.initializeGame();
+     de.czempin.chess.Info.searchtime = System.currentTimeMillis();
+     de.czempin.chess.eden.brain.OpeningBook.prepareOpeningBook();
      setPosition();
      handleMoves();
      return "";

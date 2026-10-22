@@ -479,7 +479,7 @@
      Info.hashHitCount = 0;
      Info.hashMiss = 0;
      Info.hashDepthMiss = 0;
-     Info.searchtime = System.currentTimeMillis();
+     if (Info.searchtime <= 0L || (System.currentTimeMillis() - Info.searchtime) > 500L) Info.searchtime = System.currentTimeMillis();
      Eden.calculateTimePerMove();
      Move move = analyze();
      if (move == null)
@@ -493,6 +493,7 @@
      }
      if (Options.DEBUG)
        System.out.println("debug: returning move: " + move);
+     Info.searchtime = 0L;
      return move.getText();
    }
    
@@ -554,7 +555,7 @@ String pv;
        bestMoveValidFlag.setNr(1);
        alpha = v;
      }
-     if (depth - Info.idDepth >= 10) {
+     if (depth - Info.idDepth >= (Info.idDepth <= 1 ? 4 : 6)) {
        return -alpha;
      }
      kingCapture = false;
@@ -569,7 +570,8 @@ String pv;
          illegalCount += 1;
          return -666663;
        }
-       if (!shouldBeIgnored(nextPos, newMove, capture, capturing)) {
+       if (newMove.promotedTo == 0 && capture >= 1 && capture <= 5 && v + Position.pieceValues[capture - 1] + 200 < alpha && !nextPos.isReceivingCheck()) continue;
+        if (!shouldBeIgnored(nextPos, newMove, capture, capturing)) {
          moveStack.push(newMove);
          Vector downPv = new Vector();
          int value = quiescence_alphabeta(depth + 1, nextPos, newMove, -beta, -alpha, downPv, null);
