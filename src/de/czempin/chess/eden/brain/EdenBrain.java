@@ -639,7 +639,7 @@ String pv;
        bestMoveValidFlag.setNr(1);
        alpha = v;
      }
-     if (depth - Info.idDepth >= 8) {
+     if (depth - Info.idDepth >= (Info.idDepth <= 1 ? 2 : 6)) {
        return -alpha;
      }
      kingCapture = false;
@@ -723,6 +723,8 @@ String pv;
    }
    
    private boolean timeUp() {
+     if (Info.idDepth <= 1)
+       return false;
      return this.engine.timeUp();
    }
    
@@ -816,8 +818,10 @@ String pv;
          Move move = (Move)it.next();
          Eden.currmovenumber += 1;
          Eden.currentmove = move;
-         printCurrmove(true);
-         Eden.printInfo();
+         if (Info.idDepth >= 5) {
+           printCurrmove(true);
+           Eden.printInfo();
+         }
          moveStack.clear();
          moveStack.push(move);
          alphaBetaDraws.clear();
@@ -881,7 +885,7 @@ String pv;
        printInfo();
        if (Options.DEBUG)
          System.out.println("***End of Iteration " + i + "***");
-     } while ((!timeUp()) && (!exit));
+     } while ((!this.engine.timeUp()) && (!exit));
      if (bestMove != null) {
        return bestMove;
      }
