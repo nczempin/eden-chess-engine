@@ -1,0 +1,75 @@
+Change history for Eden (current version 0.0.13)
+
+Changes from version 0.0.12->0.0.13
+See readme.txt
+
+Changes from 0.0.11->0.0.12
+- "resurrection edition", based on the lost code of version 11
+- only minor tweaks really: a few additional opening lines, plus inlining of the board array.
+
+Changes from 0.0.10->0.0.11
+- transposition table now used for pruning as well as move ordering
+- many hashtable bugs fixed
+- pawn structure hashtable fixed
+- insufficient material detected (when true for BOTH sides; missing: insufficient for one side-> upper bound = 0)
+- elementary endgames: KQK, KRRK, KRK, KBBK, all not optimal, but will eventually win within 50 moves. KBNK not yet.
+- king tropism for knights, queens and rooks (leads to stupid Kg1-h1 moves; fix in next version)
+- half-open files slightly relevant for king safety
+- opening book allows deactivating lines by preceding with "#"
+- start of cleanly separating infrastructure (e. g. UCI & WB) from actual "thinking" code (so now there are two jar files); the infrastructure part will eventually become open source
+- as always, various minor modificatios & bugfixes
+
+Changes from 0.0.9->0.0.10
+- Asynchronous behaviour (accepts commands while "thinking"), so the stop command now works properly! Hurray for Java Threads!!
+- WB now suported
+- opening book
+- transposition hashtable
+- pawn structure hashtable
+- basic endgame detection
+- improved king safety
+- passed pawns
+- killer heuristic (2 killers)
+- forced move extension
+- check extension
+- improved move ordering
+- pv display fixed
+- mate in n correctly displayed
+- many major and minor bugfixes and other changes (I'll always be saying this, so I may as well not say it. So pretend I didn't say it.)
+
+Changes from version 0.0.8 -> 0.0.9
+- Basics of three-move rule implemented
+- Minmal opening book (4 moves!)
+- An annoying bug fixed where it would not allow to castle long whenever short castling was not allowed.
+
+Changes from version 0.0.7 -> 0.0.8
+- Quiescence search now fully implements "good or equal captures", without depth limit.
+- Check recognition implementation has changed from "naive" "take the king and look around it" to the dumb but fast "oops I took your king, therefore your previous move was illegal".
+- Time management is a little more aggressive
+- Some bugs regarding terminal positions (mate or stalemate) have been fixed.
+- The "best line" is displayed again, _but_! it is not actually displaying the major line; this is a major bug. I could have taken it out again, but I decided to leave it in, to motivate me more to fix it rather than take it out.
+- As always: Tweaks in the evaluation function
+
+Changes from version 0.0.6 -> 0.0.7:
+- Basic clock management; "wtime winc btime binc" are taken into account; search is interrupted when the time limit has been reached
+- Basic Iterative Deepening (not very efficient without a hash table!)
+- Removed Feature: "slightly varies its moves when they are otherwise equal (minimal random factor in the evaluation function)"
+- quiescence search has limit of iteration depth + 1 (not enough, but necessary for performance reasons for now)
+- Basic move ordering
+- Some bugs fixed, most notably 0.0.6 seemed to have trouble when it was close to being checkmated.
+- some performance enhancements
+- As overall result, version 0.0.7 is significantly stronger and more stable than 0.0.6
+
+Changes from version 0.0.5 -> 0.0.6:
+- went from naive minimax to using alpha-beta
+- improved performance of move generation and board representation
+- added quiescence search, which currently has a hard depth limit of 6 ply.
+- more engine info is displayed as intended by the UCI protocol, such as search depth, the move currently being evaluated (and the number out of all the legal moves)
+- Going from minimax to alpha-beta made the "Main Line" management much more complicated, so I temporarily dropped it. It will be back in a later release.
+
+Changes from version 0.0.4 -> 0.0.5:
+- generalized the minimax search; it is now possible to give the search depth as a parameter (but it is currently hard-coded to 3)
+- the time spent on each move gets irritatingly slow with ply > 3; therefore the next steps will be a little optimization
+- removed the test positions for now, because I haven't updated them to the new playing strength
+
+Changes up to version 0.0.4:
+- 0.0.4 was the first publicly-released (and more or less usable) version.
