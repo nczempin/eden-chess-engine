@@ -68,7 +68,7 @@
        if (hashMove == null) {
          if ((validFlag == 2) && (hashValue <= alpha)) {
            Info.hashCutoffs += 1;
-           return -hashValue;
+           return -alpha;
          }
        } else {
          int from = hashMove.from;
@@ -76,7 +76,7 @@
            hashMove = null;
          } else {
            Vector downPv = new Vector();
-           if (validFlag == 1) {
+           if ((validFlag == 1) && (depth > 1)) {
              Info.countValidFlag += 1;
              Info.hashCutoffs += 1;
              if (hashValue >= beta) {
@@ -92,11 +92,11 @@
              if (validFlag == 4) {
                if (hashValue >= beta) {
                  Info.hashCutoffs += 1;
-                 return -hashValue;
+                 return -beta;
                }
              } else if ((validFlag == 2) && (hashValue <= alpha)) {
                Info.hashCutoffs += 1;
-               return -hashValue;
+               return -alpha;
              }
              moveStack.push(hashMove);
              v = alphabeta(depth + 1, extension, nextPos, hashMove, -beta, -alpha, downPv, checkExtensions, false);
@@ -640,7 +640,7 @@ String pv;
      while (nextPos.hasNextCaptureMove()) {
        Move newMove = nextPos.nextCaptureMove();
        int capture = Math.abs(newMove.capturedPiece);
-       int capturing = Math.abs(position.board[newMove.from]);
+       int capturing = Math.abs(nextPos.board[newMove.from]);
        if (capture == 6) {
          kingCapture = true;
          illegalCount += 1;
@@ -708,7 +708,10 @@ String pv;
    }
    
    private static boolean shouldBeIgnored(Position nextPos, Move newMove, int capture, int capturing) {
-     return false;
+     if (capture - capturing >= 0)
+       return false;
+     Position tp = Position.createTestPosition(nextPos, newMove);
+     return tp.isAttacked(newMove.to, tp.onMove());
    }
    
    private boolean timeUp() {
