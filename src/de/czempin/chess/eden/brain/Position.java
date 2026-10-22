@@ -34,14 +34,16 @@ public class Position {
 	public static int[] blackPawnSquareValues = { 0, 16, 22, 35, 45, 45, 35, 22, 16, 0, 0, 7, 14, 20, 24, 24, 20, 14, 7, 0, 0, 3, 4, 5, 6, 8, 5, 4, 3, 0, 0, 0,
 			0, 0, 6, 8, 0, 0, 0, 0, 0, -2, 1, -1, 2, 1, -2, 1, -2, 0, 0, 2, 2, 2, -6, -6, 3, 2, 2 };
 
-	private int[] kingEndgameSquareValues = { 0, -5, -3, 1, 2, 2, 1, -3, -5, 0, 0, -3, 1, 2, 3, 3, 2, 1, -3, 0, 0, 1, 2, 3, 4, 4, 3, 2, 1, 0, 0, 2, 3, 4, 5, 5,
+	private static final int[] DEFAULT_KING_ENDGAME_SQUARE_VALUES = { 0, -5, -3, 1, 2, 2, 1, -3, -5, 0, 0, -3, 1, 2, 3, 3, 2, 1, -3, 0, 0, 1, 2, 3, 4, 4, 3, 2, 1, 0, 0, 2, 3, 4, 5, 5,
 			4, 3, 2, 0, 0, 2, 3, 4, 5, 5, 4, 3, 2, 0, 0, 1, 2, 3, 4, 4, 3, 2, 1, 0, 0, -3, 1, 2, 3, 3, 2, 1, -3, 0, 0, -5, -3, 1, 2, 2, 1, -3, -5 };
 
-	private int[] kingEndgameSquareValuesKBNKLight = { 0, -50, -40, -30, -20, -15, -8, -5, 0, 0, 0, -40, 1, 2, 3, 3, 2, 1, -5, 0, 0, -30, 2, 3, 4, 4, 3, 2, -8,
+	private int[] kingEndgameSquareValues = DEFAULT_KING_ENDGAME_SQUARE_VALUES;
+
+	private static final int[] kingEndgameSquareValuesKBNKLight = { 0, -50, -40, -30, -20, -15, -8, -5, 0, 0, 0, -40, 1, 2, 3, 3, 2, 1, -5, 0, 0, -30, 2, 3, 4, 4, 3, 2, -8,
 			0, 0, -20, 3, 4, 5, 5, 4, 3, -15, 0, 0, -15, 3, 4, 5, 5, 4, 3, -20, 0, 0, -8, 2, 3, 4, 4, 3, 2, -30, 0, 0, -5, 1, 2, 3, 3, 2, 1, -40, 0, 0, 0, -5,
 			-6, -7, -8, -10, -40, -50 };
 
-	private int[] kingEndgameSquareValuesKBNKDark = { 0, 0, -5, -8, -15, -20, -30, -40, -50, 0, 0, -5, 1, 2, 3, 3, 2, 1, -40, 0, 0, -8, 2, 3, 4, 4, 3, 2, -30,
+	private static final int[] kingEndgameSquareValuesKBNKDark = { 0, 0, -5, -8, -15, -20, -30, -40, -50, 0, 0, -5, 1, 2, 3, 3, 2, 1, -40, 0, 0, -8, 2, 3, 4, 4, 3, 2, -30,
 			0, 0, -15, 3, 4, 5, 5, 4, 3, -20, 0, 0, -20, 3, 4, 5, 5, 4, 3, -15, 0, 0, -30, 2, 3, 4, 4, 3, 2, -8, 0, 0, -40, 1, 2, 3, 3, 2, 1, -5, 0, 0, -50,
 			-40, -30, -20, -15, -8, -5, 0 };
 
@@ -54,7 +56,7 @@ public class Position {
 	public static int[] whitePawnSquareValues = { 0, 16, 22, 35, 45, 45, 35, 22, 16, 0, 0, 7, 14, 20, 24, 24, 20, 14, 7, 0, 0, 3, 4, 5, 8, 6, 5, 4, 3, 0, 0, 0,
 			0, 0, 8, 6, 0, 0, 0, 0, 0, -2, 1, -2, 2, 1, -1, 1, -2, 0, 0, 2, 2, 3, -6, -6, 2, 2, 2 };
 
-	private int[] passedPawnProgression = { 7, 14, 27, 38, 45, 60 };
+	private static final int[] passedPawnProgression = { 7, 14, 27, 38, 45, 60 };
 
 	private static final Map pawnHash = new HashMap(256000, 1.0F);
 
@@ -1443,17 +1445,16 @@ public class Position {
 	}
 
 	Move generateNextCaptureMove(int i, int p, Boolean color) {
-		SortedSet moves = new TreeSet();
 		switch (p) {
 		case -1:
 
 		case 1:
-			return generateNextPawnCapture(moves, i, color);
+			return generateNextPawnCapture(new TreeSet(), i, color);
 
 		case -2:
 
 		case 2:
-			return generateNextKnightCapture(i, color, moves);
+			return generateNextKnightCapture(i, color, null);
 
 		case -3:
 
@@ -1463,17 +1464,17 @@ public class Position {
 		case -4:
 
 		case 4:
-			return generateNextRookCapture(i, color, moves);
+			return generateNextRookCapture(i, color, null);
 
 		case -5:
 
 		case 5:
-			return generateNextQueenCapture(i, color, moves);
+			return generateNextQueenCapture(i, color, null);
 
 		case -6:
 
 		case 6:
-			return generateNextKingCapture(i, color, moves);
+			return generateNextKingCapture(i, color, null);
 		}
 
 		return null;
@@ -1481,9 +1482,9 @@ public class Position {
 
 	private Move generateNextKingCapture(int i, Boolean color, SortedSet moves) {
 		if (this.kingCaptures == null) {
-			this.kingCaptures = new TreeSet();
-			generateKingCaptures(this, moves, i, color);
-			this.kingCaptures = moves;
+			SortedSet s = (moves != null) ? moves : new TreeSet();
+			generateKingCaptures(this, s, i, color);
+			this.kingCaptures = s;
 		}
 		if (this.kingCaptures.size() == 0) {
 			return null;
@@ -1496,9 +1497,9 @@ public class Position {
 
 	private Move generateNextKnightCapture(int i, Boolean color, SortedSet moves) {
 		if (this.knightCaptures == null) {
-			this.knightCaptures = new TreeSet();
-			generateKnightCaptures(this, moves, i, color);
-			this.knightCaptures = moves;
+			SortedSet s = (moves != null) ? moves : new TreeSet();
+			generateKnightCaptures(this, s, i, color);
+			this.knightCaptures = s;
 		}
 		if (this.knightCaptures.size() == 0) {
 			return null;
@@ -1510,12 +1511,11 @@ public class Position {
 	}
 
 	Move generateNextNonCaptureMove(int i, int p, Boolean color) {
-		SortedSet moves = new TreeSet();
 		switch (p) {
 		case -1:
 
 		case 1:
-			return generateNextPawnNonCapture(moves, i, color);
+			return generateNextPawnNonCapture(null, i, color);
 
 		case -2:
 
@@ -1601,9 +1601,9 @@ public class Position {
 
 	private Move generateNextQueenCapture(int i, Boolean color, SortedSet moves) {
 		if (this.queenCaptures == null) {
-			this.queenCaptures = new TreeSet();
-			generateQueenCaptures(this, moves, i, color);
-			this.queenCaptures = moves;
+			SortedSet s = (moves != null) ? moves : new TreeSet();
+			generateQueenCaptures(this, s, i, color);
+			this.queenCaptures = s;
 		}
 		if (this.queenCaptures.size() == 0) {
 			return null;
@@ -1616,9 +1616,9 @@ public class Position {
 
 	private Move generateNextRookCapture(int i, Boolean color, SortedSet moves) {
 		if (this.rookCaptures == null) {
-			this.rookCaptures = new TreeSet();
-			generateRookCaptures(this, moves, i, color);
-			this.rookCaptures = moves;
+			SortedSet s = (moves != null) ? moves : new TreeSet();
+			generateRookCaptures(this, s, i, color);
+			this.rookCaptures = s;
 		}
 		if (this.rookCaptures.size() == 0) {
 			return null;
@@ -2421,48 +2421,67 @@ public class Position {
 		initializeNonCaptureMoveCounters();
 	}
 
+	private static final int[] KNIGHT_OFFSETS = { 19, 21, 8, 12, -19, -21, -8, -12 };
+	private static final int[] KING_OFFSETS = { 9, 10, 11, -1, 1, -9, -10, -11 };
+	private static final int[] DIAG_DIRS = { 9, -9, 11, -11 };
+	private static final int[] ORTHO_DIRS = { 10, -10, 1, -1 };
+
 	public boolean isAttacked(int i, Boolean color) {
-		SortedSet moves = new TreeSet();
-		generateBishopCaptures(moves, i, color);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			if ((pieceOn(move.to).getType() == 3) || (pieceOn(move.to).getType() == 5)) {
+		if (invalidSquare(i) || color == null)
+			return false;
+		boolean isWhite = color.booleanValue();
+		int enemySign = isWhite ? -1 : 1;
+		int enemyPawn = 1 * enemySign;
+		int enemyKnight = 2 * enemySign;
+		int enemyBishop = 3 * enemySign;
+		int enemyRook = 4 * enemySign;
+		int enemyQueen = 5 * enemySign;
+		int enemyKing = 6 * enemySign;
+
+		int pawnDir = isWhite ? 10 : -10;
+		int p1 = i + pawnDir - 1;
+		if (!invalidSquare(p1) && this.board[p1] == enemyPawn)
+			return true;
+		int p2 = i + pawnDir + 1;
+		if (!invalidSquare(p2) && this.board[p2] == enemyPawn)
+			return true;
+
+		for (int k = 0; k < 8; k++) {
+			int next = i + KNIGHT_OFFSETS[k];
+			if (!invalidSquare(next) && this.board[next] == enemyKnight)
 				return true;
+		}
+
+		for (int k = 0; k < 8; k++) {
+			int next = i + KING_OFFSETS[k];
+			if (!invalidSquare(next) && this.board[next] == enemyKing)
+				return true;
+		}
+
+		for (int d = 0; d < 4; d++) {
+			int step = DIAG_DIRS[d];
+			for (int next = i + step; !invalidSquare(next); next += step) {
+				int piece = this.board[next];
+				if (piece != 0) {
+					if (piece == enemyBishop || piece == enemyQueen)
+						return true;
+					break;
+				}
 			}
 		}
-		moves.clear();
-		generateRookCaptures(this, moves, i, color);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			if ((pieceOn(move.to).getType() == 4) || (pieceOn(move.to).getType() == 5)) {
-				return true;
+
+		for (int d = 0; d < 4; d++) {
+			int step = ORTHO_DIRS[d];
+			for (int next = i + step; !invalidSquare(next); next += step) {
+				int piece = this.board[next];
+				if (piece != 0) {
+					if (piece == enemyRook || piece == enemyQueen)
+						return true;
+					break;
+				}
 			}
 		}
-		moves.clear();
-		generateKingCaptures(this, moves, i, color);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			if (pieceOn(move.to).getType() == 6) {
-				return true;
-			}
-		}
-		moves.clear();
-		generateKnightCaptures(this, moves, i, color);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			Piece p = pieceOn(move.to);
-			if ((p != null) && (p.getType() == 2)) {
-				return true;
-			}
-		}
-		moves.clear();
-		generatePawnCaptures(this, moves, i, color);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			if (pieceOn(move.to).getType() == 1) {
-				return true;
-			}
-		}
+
 		return false;
 	}
 
@@ -2500,241 +2519,25 @@ public class Position {
 		if (this.isGivingCheck != null)
 			return this.isGivingCheck.booleanValue();
 		Boolean othercolor = Boolean.valueOf(!onMove().booleanValue());
-		int currentPiece = findKing(othercolor.booleanValue());
-		if (currentPiece == -1)
+		int kingPosition = findKing(othercolor.booleanValue());
+		if (kingPosition == -1)
 			throw new IllegalStateException("no king found");
-		int i = currentPiece;
-		SortedSet moves = new TreeSet();
-		generateBishopCaptures(moves, i, othercolor);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if ((piece == 3) || (piece == 5)) {
-				int t = this.board[move.to];
-				Boolean c = EdenBrain.convertColor(t);
-				if (!c.equals(othercolor)) {
-					this.isGivingCheck = new Boolean(true);
-					return true;
-				}
-			}
-		}
-
-		moves.clear();
-		generateRookCaptures(this, moves, i, othercolor);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if ((piece == 4) || (piece == 5)) {
-				int t = this.board[move.to];
-				Boolean c = EdenBrain.convertColor(t);
-				if (!c.equals(othercolor)) {
-					this.isGivingCheck = new Boolean(true);
-					return true;
-				}
-			}
-		}
-
-		moves.clear();
-		generateKingCaptures(this, moves, i, othercolor);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if (piece == 6) {
-				this.isGivingCheck = new Boolean(true);
-				return true;
-			}
-		}
-
-		moves.clear();
-		generateKnightCaptures(this, moves, i, othercolor);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if (piece == 2) {
-				int t = this.board[move.to];
-				Boolean c = EdenBrain.convertColor(t);
-				if (!c.equals(othercolor)) {
-					this.isGivingCheck = new Boolean(true);
-					return true;
-				}
-			}
-		}
-
-		moves.clear();
-		generatePawnCaptures(this, moves, i, othercolor);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if ((piece == 1) && (Math.abs(this.board[move.to]) == 1)) {
-				int t = this.board[move.to];
-				Boolean c = EdenBrain.convertColor(t);
-				if (!c.equals(othercolor)) {
-					this.isGivingCheck = new Boolean(true);
-					return true;
-				}
-			}
-		}
-
-		this.isGivingCheck = new Boolean(false);
-		return false;
+		boolean attacked = isAttacked(kingPosition, othercolor);
+		this.isGivingCheck = Boolean.valueOf(attacked);
+		return attacked;
 	}
 
 	boolean isGivingCheckForCastling(int square) {
 		if (this.isGivingCheck != null)
 			return this.isGivingCheck.booleanValue();
-		int i = square;
-		Boolean c1 = EdenBrain.convertColor(this.board[i]);
-		SortedSet moves = new TreeSet();
-		generateBishopCaptures(moves, i, c1);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if ((piece == 3) || (piece == 5)) {
-				int t = this.board[move.to];
-				Boolean c = EdenBrain.convertColor(t);
-				if (!c.equals(c1)) {
-					this.isGivingCheck = new Boolean(true);
-					return true;
-				}
-			}
-		}
-
-		moves.clear();
-		generateRookCaptures(this, moves, i, c1);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if ((piece == 4) || (piece == 5)) {
-				int t = this.board[move.to];
-				Boolean c = EdenBrain.convertColor(t);
-				if (!c.equals(c1)) {
-					this.isGivingCheck = new Boolean(true);
-					return true;
-				}
-			}
-		}
-
-		moves.clear();
-		generateKingCaptures(this, moves, i, c1);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if (piece == 6) {
-				this.isGivingCheck = new Boolean(true);
-				return true;
-			}
-		}
-
-		moves.clear();
-		generateKnightCaptures(this, moves, i, c1);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if (piece == 2) {
-				int t = this.board[move.to];
-				Boolean c = EdenBrain.convertColor(t);
-				if (!c.equals(c1)) {
-					this.isGivingCheck = new Boolean(true);
-					return true;
-				}
-			}
-		}
-
-		moves.clear();
-		generatePawnCaptures(this, moves, i, Boolean.valueOf(!onMove().booleanValue()));
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if ((piece == 1) && (Math.abs(this.board[move.to]) == 1)) {
-				int t = this.board[move.to];
-				Boolean c = EdenBrain.convertColor(t);
-				if (!c.equals(c1)) {
-					this.isGivingCheck = new Boolean(true);
-					return true;
-				}
-			}
-		}
-
-		this.isGivingCheck = new Boolean(false);
-		return false;
+		Boolean c1 = EdenBrain.convertColor(this.board[square]);
+		boolean attacked = isAttacked(square, c1);
+		this.isGivingCheck = Boolean.valueOf(attacked);
+		return attacked;
 	}
 
 	boolean isGivingCheckNonKingMoving(int moveFrom) {
-		Integer zobrist = null;
-		if (this.isGivingCheck != null)
-			return this.isGivingCheck.booleanValue();
-		Boolean othercolor = Boolean.valueOf(!onMove().booleanValue());
-		int kingPosition = findKing(othercolor.booleanValue());
-		if (kingPosition == -1)
-			throw new IllegalStateException("no king found");
-		SortedSet moves = new TreeSet();
-		if (onDiagonal(moveFrom, kingPosition)) {
-			moves.clear();
-			generateBishopCaptures(moves, kingPosition, othercolor);
-			for (Iterator it = moves.iterator(); it.hasNext();) {
-				Move move = (Move) it.next();
-				int piece = Math.abs(this.board[move.to]);
-				if ((piece == 3) || (piece == 5)) {
-					int t = this.board[move.to];
-					Boolean c = EdenBrain.convertColor(t);
-					if (!c.equals(othercolor)) {
-						this.isGivingCheck = new Boolean(true);
-						addToCheckHash(zobrist);
-						return true;
-					}
-				}
-			}
-
-			moves.clear();
-			generatePawnCaptures(this, moves, kingPosition, othercolor);
-			for (Iterator it = moves.iterator(); it.hasNext();) {
-				Move move = (Move) it.next();
-				int piece = Math.abs(this.board[move.to]);
-				if (piece == 1) {
-					int t = this.board[move.to];
-					Boolean c = EdenBrain.convertColor(t);
-					if (c.equals(othercolor)) {
-						this.isGivingCheck = new Boolean(true);
-						addToCheckHash(zobrist);
-						return true;
-					}
-				}
-			}
-		}
-
-		if ((onRank(moveFrom, kingPosition)) || (onFile(moveFrom, kingPosition))) {
-			moves.clear();
-			generateRookCaptures(this, moves, kingPosition, othercolor);
-			for (Iterator it = moves.iterator(); it.hasNext();) {
-				Move move = (Move) it.next();
-				int piece = Math.abs(this.board[move.to]);
-				if ((piece == 4) || (piece == 5)) {
-					int t = this.board[move.to];
-					Boolean c = EdenBrain.convertColor(t);
-					if (!c.equals(othercolor)) {
-						this.isGivingCheck = new Boolean(true);
-						addToCheckHash(zobrist);
-						return true;
-					}
-				}
-			}
-		}
-
-		moves.clear();
-		generateKingCaptures(this, moves, kingPosition, othercolor);
-		for (Iterator it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			int piece = Math.abs(this.board[move.to]);
-			if (piece == 6) {
-				this.isGivingCheck = new Boolean(true);
-				addToCheckHash(zobrist);
-				return true;
-			}
-		}
-
-		this.isGivingCheck = new Boolean(false);
-		addToCheckHash(zobrist);
-		return false;
+		return isGivingCheck();
 	}
 
 	private boolean isInsufficientMaterial(PieceCount pc) {
@@ -2800,61 +2603,9 @@ public class Position {
 		int kingPosition = findKing(kingColor.booleanValue());
 		if (kingPosition == -1)
 			throw new IllegalStateException("no king found");
-		int i = kingPosition;
-		SortedSet moves = new TreeSet();
-		Iterator it = moves.iterator();
-		generateRookCaptures(this, moves, i, kingColor);
-		for (it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			if ((pieceOn(move.to).getType() == 4) || (pieceOn(move.to).getType() == 5)) {
-				this.isReceivingCheck = new Boolean(true);
-				return true;
-			}
-		}
-
-		moves.clear();
-		generatePawnCaptures(this, moves, i, kingColor);
-		for (it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			if (pieceOn(move.to).getType() == 1) {
-				this.isReceivingCheck = new Boolean(true);
-				return true;
-			}
-		}
-
-		moves.clear();
-		generateKnightCaptures(this, moves, i, kingColor);
-		for (it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			Piece p = pieceOn(move.to);
-			if ((p != null) && (p.getType() == 2)) {
-				this.isReceivingCheck = new Boolean(true);
-				return true;
-			}
-		}
-
-		moves.clear();
-		generateBishopCaptures(moves, i, kingColor);
-		for (it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			if ((pieceOn(move.to).getType() == 3) || (pieceOn(move.to).getType() == 5)) {
-				this.isReceivingCheck = new Boolean(true);
-				return true;
-			}
-		}
-
-		moves.clear();
-		generateKingMovesNoCastling(this, moves, i, kingColor);
-		for (it = moves.iterator(); it.hasNext();) {
-			Move move = (Move) it.next();
-			if (pieceOn(move.to).getType() == 6) {
-				this.isReceivingCheck = new Boolean(true);
-				return true;
-			}
-		}
-
-		this.isReceivingCheck = new Boolean(false);
-		return false;
+		boolean attacked = isAttacked(kingPosition, kingColor);
+		this.isReceivingCheck = Boolean.valueOf(attacked);
+		return attacked;
 	}
 
 	public boolean isStartPosition() {

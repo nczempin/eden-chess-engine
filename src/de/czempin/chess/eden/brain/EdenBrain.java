@@ -51,6 +51,11 @@
          System.out.println("debug: three repetitions!");
        return 0; }
      try {
+     if (nextPos.isGivingCheck()) {
+       illegalCount += 1;
+       kingCapture = true;
+       return -666661;
+     }
      if ((!justExtended) && (Options.useCheckExtensions) && (checkExtensions < 4) && (Info.idDepth > 4) && (nextPos.isReceivingCheck()))
        return checkExtension(depth, extension, position, move, originalAlpha, beta, upPv, checkExtensions, true);
      Set markForDelete = new java.util.HashSet();
@@ -215,7 +220,7 @@
        boolean killerIsLegal = false;
        while (itx.hasNext()) {
          Move m = (Move)itx.next();
-         if (m.getText().equals(killerMove1.getText())) {
+         if ((m.from == killerMove1.from) && (m.to == killerMove1.to) && (m.promotedTo == killerMove1.promotedTo)) {
            killerMove1 = m;
            killerIsLegal = true;
            break;
@@ -224,7 +229,7 @@
        if (!killerIsLegal) {
          for (itx = deferredMoves.iterator(); itx.hasNext();) {
            Move m = (Move)itx.next();
-           if (m.getText().equals(killerMove1.getText())) {
+           if ((m.from == killerMove1.from) && (m.to == killerMove1.to) && (m.promotedTo == killerMove1.promotedTo)) {
              killerMove1 = m;
              killerIsLegal = true;
              break;
@@ -273,7 +278,7 @@
        boolean killerIsLegal = false;
        while (itx.hasNext()) {
          Move m = (Move)itx.next();
-         if (m.getText().equals(killerMove2.getText())) {
+         if ((m.from == killerMove2.from) && (m.to == killerMove2.to) && (m.promotedTo == killerMove2.promotedTo)) {
            killerMove2 = m;
            killerIsLegal = true;
            break;
@@ -282,7 +287,7 @@
        if (!killerIsLegal) {
          for (itx = deferredMoves.iterator(); itx.hasNext();) {
            Move m = (Move)itx.next();
-           if (m.getText().equals(killerMove2.getText())) {
+           if ((m.from == killerMove2.from) && (m.to == killerMove2.to) && (m.promotedTo == killerMove2.promotedTo)) {
              killerMove2 = m;
              killerIsLegal = true;
              break;
@@ -634,6 +639,9 @@ String pv;
        bestMoveValidFlag.setNr(1);
        alpha = v;
      }
+     if (depth - Info.idDepth >= 8) {
+       return -alpha;
+     }
      kingCapture = false;
      int loopCount = 0;
      nextPos.initCaptureMoveGenerator();
@@ -715,8 +723,6 @@ String pv;
    }
    
    private boolean timeUp() {
-     if (Info.idDepth <= 1)
-       return false;
      return this.engine.timeUp();
    }
    

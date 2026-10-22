@@ -13,7 +13,7 @@
  
  public class Eden extends AbstractEngine
  {
-   public static final String VERSION = "0.0.14";
+   public static final String VERSION = "0.0.15";
    
    public Eden()
    {
@@ -71,11 +71,11 @@
    {
      if ((t <= 0L) && (inc <= 0L))
        return -1L;
-     long overhead = Math.min(50L, Math.max(10L, t / 5L));
+     long overhead = Math.min(80L, Math.max(25L, t / 4L));
      long available = Math.max(5L, t - overhead);
-     int slice = Math.max(2, getMovestogo() + 1);
-     long retVal = available / slice + (inc * 3L) / 4L;
-     long maxAllowed = Math.max(5L, available / 2L);
+     int slice = Math.max(4, getMovestogo() + 5);
+     long retVal = available / slice + (inc * 2L) / 3L;
+     long maxAllowed = Math.max(5L, available / 3L);
      if (retVal > maxAllowed)
        retVal = maxAllowed;
      if (retVal < 5L)
