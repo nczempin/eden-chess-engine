@@ -647,7 +647,7 @@ public class Position {
 
 	SortedSet whitePieces;
 
-	private long zobrist;
+	long zobrist;
 
 	private Long pzCache;
 
@@ -687,31 +687,10 @@ public class Position {
 	}
 
 	private Position(Position position) {
-		this.bishopCaptureCount = 0;
-		this.bishopNonCaptureCount = 0;
-		this.blackKing = -1;
-		this.blackPieces = new TreeSet();
-		this.captureMoves = null;
-		this.castleLongBlack = true;
-		this.castleLongWhite = true;
-		this.castleShortBlack = true;
-		this.castleShortWhite = true;
-		this.enPassantSquare = 0;
-		this.hasCastledBlack = false;
-		this.hasCastledWhite = false;
-		this.isGivingCheck = null;
-		this.isReceivingCheck = null;
-		this.isStartPosition = false;
-		this.moveNr = 0;
-		this.onMove = WHITE;
-		this.whiteKing = -1;
-		this.whitePieces = new TreeSet();
 		Info.nodes += 1L;
 		this.board = new int[89];
-		copyBoard(position.board, this.board);
-		this.whitePieces.addAll(position.whitePieces);
+		System.arraycopy(position.board, 0, this.board, 0, 89);
 		this.whiteKing = position.whiteKing;
-		this.blackPieces.addAll(position.blackPieces);
 		this.blackKing = position.blackKing;
 		this.isStartPosition = position.isStartPosition();
 		this.onMove = position.onMove();
@@ -776,31 +755,11 @@ public class Position {
 
 	private void adjustKingSquaresForKBNK() {
 		Boolean lightSquaredBishop = null;
-		for (Iterator itW = this.whitePieces.iterator(); itW.hasNext();) {
-			int s = ((Integer) itW.next()).intValue();
+		for (int s = 11; s < 89; s++) {
 			int piece = this.board[s];
-			if (piece == 3) {
-				if (s % 2 == 0) {
-					lightSquaredBishop = Boolean.TRUE;
-					break;
-				}
-				lightSquaredBishop = Boolean.FALSE;
+			if (piece == 3 || piece == -3) {
+				lightSquaredBishop = (s % 2 == 0) ? Boolean.TRUE : Boolean.FALSE;
 				break;
-			}
-		}
-
-		if (lightSquaredBishop == null) {
-			for (Iterator itB = this.blackPieces.iterator(); itB.hasNext();) {
-				int s = ((Integer) itB.next()).intValue();
-				int piece = this.board[s];
-				if (piece == -3) {
-					if (s % 2 == 0) {
-						lightSquaredBishop = Boolean.TRUE;
-						break;
-					}
-					lightSquaredBishop = Boolean.FALSE;
-					break;
-				}
 			}
 		}
 
@@ -850,11 +809,9 @@ public class Position {
 		if (move.to > move.from) {
 			zobi = kleinerZobristEntfernen(move.to - 10);
 			clearSquare(move.to, -10, board);
-			this.blackPieces.remove(new Integer(move.to - 10));
 		} else {
 			zobi = kleinerZobristEntfernen(move.to + 10);
 			clearSquare(move.to, 10, board);
-			this.whitePieces.remove(new Integer(move.to + 10));
 		}
 		this.zobrist ^= zobi;
 		if (this.pawnZobrist != null) {
@@ -863,75 +820,31 @@ public class Position {
 	}
 
 	private PieceCount countBlackPieces() {
-		int queensCount = 0;
-		int rookCount = 0;
-		int knightsCount = 0;
-		int bishopsCount = 0;
-		int pawnsCount = 0;
-		for (Iterator wpIt = this.blackPieces.iterator(); wpIt.hasNext();) {
-			int i = ((Integer) wpIt.next()).intValue();
-			int piece = this.board[i];
-			switch (piece) {
-			case -1:
-				pawnsCount++;
-				break;
-
-			case -4:
-				rookCount++;
-				break;
-
-			case -3:
-				bishopsCount++;
-				break;
-
-			case -2:
-				knightsCount++;
-				break;
-
-			case -5:
-				queensCount++;
+		int queensCount = 0, rookCount = 0, knightsCount = 0, bishopsCount = 0, pawnsCount = 0;
+		for (int i = 11; i < 89; i++) {
+			switch (this.board[i]) {
+			case -1: pawnsCount++; break;
+			case -2: knightsCount++; break;
+			case -3: bishopsCount++; break;
+			case -4: rookCount++; break;
+			case -5: queensCount++; break;
 			}
-
 		}
-
-		PieceCount wpc = new PieceCount(pawnsCount, knightsCount, bishopsCount, rookCount, queensCount);
-		return wpc;
+		return new PieceCount(pawnsCount, knightsCount, bishopsCount, rookCount, queensCount);
 	}
 
 	private PieceCount countWhitePieces() {
-		int queensCount = 0;
-		int rookCount = 0;
-		int knightsCount = 0;
-		int bishopsCount = 0;
-		int pawnsCount = 0;
-		for (Iterator wpIt = this.whitePieces.iterator(); wpIt.hasNext();) {
-			int i = ((Integer) wpIt.next()).intValue();
-			int piece = this.board[i];
-			switch (piece) {
-			case 1:
-				pawnsCount++;
-				break;
-
-			case 4:
-				rookCount++;
-				break;
-
-			case 3:
-				bishopsCount++;
-				break;
-
-			case 2:
-				knightsCount++;
-				break;
-
-			case 5:
-				queensCount++;
+		int queensCount = 0, rookCount = 0, knightsCount = 0, bishopsCount = 0, pawnsCount = 0;
+		for (int i = 11; i < 89; i++) {
+			switch (this.board[i]) {
+			case 1: pawnsCount++; break;
+			case 2: knightsCount++; break;
+			case 3: bishopsCount++; break;
+			case 4: rookCount++; break;
+			case 5: queensCount++; break;
 			}
-
 		}
-
-		PieceCount wpc = new PieceCount(pawnsCount, knightsCount, bishopsCount, rookCount, queensCount);
-		return wpc;
+		return new PieceCount(pawnsCount, knightsCount, bishopsCount, rookCount, queensCount);
 	}
 
 	public int enPassant() {
@@ -986,32 +899,20 @@ public class Position {
 			Info.pawnStructureHits += 1;
 			return value.intValue();
 		}
-		Iterator whiteIt = this.whitePieces.iterator();
 		int whiteCValue = 0;
-		while (whiteIt.hasNext()) {
-			int whiteSquare = ((Integer) whiteIt.next()).intValue();
-			int whitePiece = this.board[whiteSquare];
-			if (whitePiece == 1) {
-				whiteCValue += pieceValues[0];
-				int file = whiteSquare % 10;
-				whiteCValue += getPawnEndgameValue(whiteSquare, whitePiece, file);
-			}
-		}
-		Iterator blackIt = this.blackPieces.iterator();
 		int blackCValue = 0;
-		while (blackIt.hasNext()) {
-			int blackSquare = ((Integer) blackIt.next()).intValue();
-			int blackPiece = this.board[blackSquare];
-			if (blackPiece == -1) {
-				blackCValue += pieceValues[0];
-				int file = blackSquare % 10;
-				blackCValue += getPawnEndgameValue(blackSquare, blackPiece, file);
+		for (int sq = 21; sq < 79; sq++) {
+			int p = this.board[sq];
+			if (p == 1) {
+				whiteCValue += pieceValues[0] + getPawnEndgameValue(sq, 1, sq % 10);
+			} else if (p == -1) {
+				blackCValue += pieceValues[0] + getPawnEndgameValue(sq, -1, sq % 10);
 			}
 		}
 		int retVal = whiteCValue - blackCValue;
 		Info.phSize = pawnHash.size();
 		if (Info.phSize < 256000)
-			pawnHash.put(pz, new Integer(retVal));
+			pawnHash.put(pz, Integer.valueOf(retVal));
 		return retVal;
 	}
 
@@ -1023,26 +924,14 @@ public class Position {
 			Info.pawnStructureHits += 1;
 			return value.intValue();
 		}
-		Iterator whiteIt = this.whitePieces.iterator();
 		int whiteCValue = 0;
-		while (whiteIt.hasNext()) {
-			int whiteSquare = ((Integer) whiteIt.next()).intValue();
-			int whitePiece = this.board[whiteSquare];
-			if (whitePiece == 1) {
-				whiteCValue += pieceValues[0];
-				int file = whiteSquare % 10;
-				whiteCValue += getPawnMidgameValue(whiteSquare, whitePiece, file);
-			}
-		}
-		Iterator blackIt = this.blackPieces.iterator();
 		int blackCValue = 0;
-		while (blackIt.hasNext()) {
-			int blackSquare = ((Integer) blackIt.next()).intValue();
-			int blackPiece = this.board[blackSquare];
-			if (blackPiece == -1) {
-				blackCValue += pieceValues[0];
-				int file = blackSquare % 10;
-				blackCValue += getPawnMidgameValue(blackSquare, blackPiece, file);
+		for (int sq = 21; sq < 79; sq++) {
+			int p = this.board[sq];
+			if (p == 1) {
+				whiteCValue += pieceValues[0] + getPawnMidgameValue(sq, 1, sq % 10);
+			} else if (p == -1) {
+				blackCValue += pieceValues[0] + getPawnMidgameValue(sq, -1, sq % 10);
 			}
 		}
 		int retVal = whiteCValue - blackCValue;
@@ -1222,15 +1111,12 @@ public class Position {
 
 	public SortedSet generateCaptureMoves() {
 		SortedSet moves = new TreeSet();
+		boolean isWhite = onMove().booleanValue();
+		Boolean side = isWhite ? WHITE : BLACK;
 		for (int i = 11; i < 89; i++) {
 			int p = this.board[i];
-			int type = Math.abs(p);
-			if ((type >= 1) && (type <= 7)) {
-				Boolean color = EdenBrain.convertColor(p);
-				if (color.equals(onMove())) {
-					SortedSet pieceMoves = generateCaptureMoves(i, p, color);
-					moves.addAll(pieceMoves);
-				}
+			if (isWhite ? (p >= 1 && p <= 6) : (p <= -1 && p >= -6)) {
+				generateCaptureMoves(i, p, side, moves);
 			}
 		}
 
@@ -1239,6 +1125,11 @@ public class Position {
 
 	SortedSet generateCaptureMoves(int i, int p, Boolean color) {
 		SortedSet moves = new TreeSet();
+		generateCaptureMoves(i, p, color, moves);
+		return moves;
+	}
+
+	void generateCaptureMoves(int i, int p, Boolean color, SortedSet moves) {
 		switch (p) {
 		case -1:
 
@@ -1275,8 +1166,6 @@ public class Position {
 		case 6:
 			generateKingCaptures(this, moves, i, color);
 		}
-
-		return moves;
 	}
 
 	public void generateKingNonCapturesNoCastling(Set moves, int from, Boolean color) {
@@ -1631,15 +1520,12 @@ public class Position {
 
 	public SortedSet generateNonCaptureMoves() {
 		SortedSet moves = new TreeSet();
+		boolean isWhite = onMove().booleanValue();
+		Boolean side = isWhite ? WHITE : BLACK;
 		for (int i = 11; i < 89; i++) {
 			int p = this.board[i];
-			int type = Math.abs(p);
-			if ((type >= 1) && (type <= 7)) {
-				Boolean color = EdenBrain.convertColor(p);
-				if (color.equals(onMove())) {
-					SortedSet pieceMoves = generateNonCaptureMoves(i, p, color);
-					moves.addAll(pieceMoves);
-				}
+			if (isWhite ? (p >= 1 && p <= 6) : (p <= -1 && p >= -6)) {
+				generateNonCaptureMoves(i, p, side, moves);
 			}
 		}
 
@@ -1648,6 +1534,11 @@ public class Position {
 
 	SortedSet generateNonCaptureMoves(int square, int piece, Boolean color) {
 		SortedSet moves = new TreeSet();
+		generateNonCaptureMoves(square, piece, color, moves);
+		return moves;
+	}
+
+	void generateNonCaptureMoves(int square, int piece, Boolean color, SortedSet moves) {
 		switch (piece) {
 		case -1:
 
@@ -1685,8 +1576,6 @@ public class Position {
 			generateKingNonCapturesNoCastling(moves, square, color);
 			generateCastling(this, moves, square);
 		}
-
-		return moves;
 	}
 
 	private Move generatePawnNonCapture1(int from, Boolean color) {
@@ -1825,38 +1714,23 @@ public class Position {
 		boolean possibleBishopPairWhite = false;
 		boolean possibleBishopPairBlack = false;
 		int pawnStructureValue = evaluatePawnStructureEndgame();
-		Iterator whiteIt = this.whitePieces.iterator();
-		int whiteCValue = 0;
-		int whiteMValue = 0;
-		while (whiteIt.hasNext()) {
-			int whiteSquare = ((Integer) whiteIt.next()).intValue();
-			int whitePiece = this.board[whiteSquare];
-			if (whitePiece != 1) {
-				whiteMValue += getPieceMaterialValue(whitePiece);
-				if (whitePiece == 3) {
-					if (possibleBishopPairWhite)
-						whiteCValue += 50;
+		int whiteCValue = 0, whiteMValue = 0, blackCValue = 0, blackMValue = 0;
+		for (int sq = 11; sq < 89; sq++) {
+			int p = this.board[sq];
+			if (p > 1 && p <= 6) {
+				whiteMValue += getPieceMaterialValue(p);
+				if (p == 3) {
+					if (possibleBishopPairWhite) whiteCValue += 50;
 					possibleBishopPairWhite = true;
 				}
-				int file = whiteSquare % 10;
-				whiteCValue += getPieceEndgameValue(whiteSquare, whitePiece, file);
-			}
-		}
-		Iterator blackIt = this.blackPieces.iterator();
-		int blackCValue = 0;
-		int blackMValue = 0;
-		while (blackIt.hasNext()) {
-			int blackSquare = ((Integer) blackIt.next()).intValue();
-			int blackPiece = this.board[blackSquare];
-			if (blackPiece != -1) {
-				blackMValue += getPieceMaterialValue(blackPiece);
-				if (blackPiece == -3) {
-					if (possibleBishopPairBlack)
-						blackCValue += 50;
+				whiteCValue += getPieceEndgameValue(sq, p, sq % 10);
+			} else if (p < -1 && p >= -6) {
+				blackMValue += getPieceMaterialValue(p);
+				if (p == -3) {
+					if (possibleBishopPairBlack) blackCValue += 50;
 					possibleBishopPairBlack = true;
 				}
-				int file = blackSquare % 10;
-				blackCValue += getPieceEndgameValue(blackSquare, blackPiece, file);
+				blackCValue += getPieceEndgameValue(sq, p, sq % 10);
 			}
 		}
 		blackValue += blackCValue;
@@ -1914,8 +1788,8 @@ public class Position {
 			openFiles++;
 		} else if (isOnOpenOrHalfOpenFile(piece, file + 1, rank))
 			halfOpenFiles++;
-		retValue = (int) (retValue - 30.0D * Math.pow(2.0D, openFiles));
-		retValue = (int) (retValue - 5.0D * Math.pow(2.0D, halfOpenFiles));
+		retValue -= 30 * (1 << openFiles);
+		retValue -= 5 * (1 << halfOpenFiles);
 		if (piece == 6) {
 			if ((square > 13) && (square < 17))
 				retValue -= 35;
@@ -2008,38 +1882,23 @@ public class Position {
 		boolean possibleBishopPairWhite = false;
 		boolean possibleBishopPairBlack = false;
 		int pawnStructureValue = evaluatePawnStructureMidgame();
-		Iterator whiteIt = this.whitePieces.iterator();
-		int whiteCValue = 0;
-		int whiteMValue = 0;
-		while (whiteIt.hasNext()) {
-			int whiteSquare = ((Integer) whiteIt.next()).intValue();
-			int whitePiece = this.board[whiteSquare];
-			if (whitePiece != 1) {
-				whiteMValue += getPieceMaterialValue(whitePiece);
-				if (whitePiece == 3) {
-					if (possibleBishopPairWhite)
-						whiteCValue += 50;
+		int whiteCValue = 0, whiteMValue = 0, blackCValue = 0, blackMValue = 0;
+		for (int sq = 11; sq < 89; sq++) {
+			int p = this.board[sq];
+			if (p > 1 && p <= 6) {
+				whiteMValue += getPieceMaterialValue(p);
+				if (p == 3) {
+					if (possibleBishopPairWhite) whiteCValue += 50;
 					possibleBishopPairWhite = true;
 				}
-				int file = whiteSquare % 10;
-				whiteCValue += getPieceMidgameValue(whiteSquare, whitePiece, file);
-			}
-		}
-		Iterator blackIt = this.blackPieces.iterator();
-		int blackCValue = 0;
-		int blackMValue = 0;
-		while (blackIt.hasNext()) {
-			int blackSquare = ((Integer) blackIt.next()).intValue();
-			int blackPiece = this.board[blackSquare];
-			if (blackPiece != -1) {
-				blackMValue += getPieceMaterialValue(blackPiece);
-				if (blackPiece == -3) {
-					if (possibleBishopPairBlack)
-						blackCValue += 50;
+				whiteCValue += getPieceMidgameValue(sq, p, sq % 10);
+			} else if (p < -1 && p >= -6) {
+				blackMValue += getPieceMaterialValue(p);
+				if (p == -3) {
+					if (possibleBishopPairBlack) blackCValue += 50;
 					possibleBishopPairBlack = true;
 				}
-				int file = blackSquare % 10;
-				blackCValue += getPieceMidgameValue(blackSquare, blackPiece, file);
+				blackCValue += getPieceMidgameValue(sq, p, sq % 10);
 			}
 		}
 		blackValue += blackCValue;
@@ -2114,25 +1973,13 @@ public class Position {
 		if (this.pawnZobrist != null)
 			return this.pawnZobrist;
 		long grosserZobrist = 0L;
-		for (Iterator wIt = this.whitePieces.iterator(); wIt.hasNext();) {
-			int square = ((Integer) wIt.next()).intValue();
+		for (int square = 21; square < 79; square++) {
 			int figur = this.board[square];
-			if (figur == 1) {
-				long kleinerZobrist = kleinerZobristSetzen(figur, square);
-				grosserZobrist ^= kleinerZobrist;
+			if (figur == 1 || figur == -1) {
+				grosserZobrist ^= kleinerZobristSetzen(figur, square);
 			}
 		}
-
-		for (Iterator bIt = this.blackPieces.iterator(); bIt.hasNext();) {
-			int square = ((Integer) bIt.next()).intValue();
-			int figur = this.board[square];
-			if (figur == -1) {
-				long kleinerZobrist = kleinerZobristSetzen(figur, square);
-				grosserZobrist ^= kleinerZobrist;
-			}
-		}
-
-		Long pz = new Long(grosserZobrist);
+		Long pz = Long.valueOf(grosserZobrist);
 		this.pawnZobrist = pz;
 		return pz;
 	}
@@ -2873,54 +2720,26 @@ public class Position {
 	}
 
 	private int moveRaw(Move move) {
-		int movingPiece = 0;
-		Integer fromSquare = new Integer(move.from);
-		Integer capturedSquare = new Integer(move.to);
 		int capturedPiece = this.board[move.to];
-		if (capturedPiece > 0) {
-			this.whitePieces.remove(capturedSquare);
-			if (capturedPiece == 6) {
-				this.whiteKing = -1;
-			}
-		} else if (capturedPiece < 0) {
-			this.blackPieces.remove(capturedSquare);
-			if (capturedPiece == -6)
-				this.blackKing = -1;
+		if (capturedPiece == 6) {
+			this.whiteKing = -1;
+		} else if (capturedPiece == -6) {
+			this.blackKing = -1;
 		}
+		int movingPiece;
 		if (move.promotedTo == 0) {
 			movingPiece = this.board[move.from];
-			if (movingPiece > 0) {
-				this.whitePieces.add(capturedSquare);
-				this.whitePieces.remove(fromSquare);
-				if (movingPiece == 6) {
-					this.whiteKing = move.to;
-				}
-			} else {
-				this.blackPieces.add(capturedSquare);
-				this.blackPieces.remove(fromSquare);
-				if (movingPiece == -6)
-					this.blackKing = move.to;
+			if (movingPiece == 6) {
+				this.whiteKing = move.to;
+			} else if (movingPiece == -6) {
+				this.blackKing = move.to;
 			}
 			this.board[move.to] = movingPiece;
-			clearSquare(move.from, 0, this.board);
+			this.board[move.from] = 0;
 		} else {
-			movingPiece = move.promotedTo;
-			if (this.board[move.from] < 0)
-				movingPiece *= -1;
+			movingPiece = (this.board[move.from] < 0) ? -Math.abs(move.promotedTo) : Math.abs(move.promotedTo);
 			this.board[move.to] = movingPiece;
-			clearSquare(move.from, 0, this.board);
-			if (movingPiece > 0) {
-				this.whitePieces.add(new Integer(move.to));
-				this.whitePieces.remove(fromSquare);
-				if (movingPiece == 6) {
-					this.whiteKing = move.to;
-				}
-			} else {
-				this.blackPieces.add(new Integer(move.to));
-				this.blackPieces.remove(fromSquare);
-				if (movingPiece == -6)
-					this.blackKing = move.to;
-			}
+			this.board[move.from] = 0;
 		}
 		return movingPiece;
 	}
@@ -2987,9 +2806,9 @@ public class Position {
 		Info.hashReads += 1;
 		int depthToGo = Info.idDepth + (int) extensions - depth;
 		long z = getZobrist();
-		Long zobi = new Long(z);
-		if (EdenBrain.transpositions.containsKey(zobi)) {
-			TransEntry te = (TransEntry) EdenBrain.transpositions.get(zobi);
+		Long zobi = Long.valueOf(z);
+		TransEntry te = (TransEntry) EdenBrain.transpositions.get(zobi);
+		if (te != null) {
 			int height = te.getDepth();
 			if (depthToGo > height) {
 				Info.hashDepthMiss += 1;
@@ -3088,10 +2907,8 @@ public class Position {
 	public void testClearEnPassantCapture(Move move, int[] board) {
 		if (move.to > move.from) {
 			clearSquare(move.to, -10, board);
-			this.blackPieces.remove(new Integer(move.to - 10));
 		} else {
 			clearSquare(move.to, 10, board);
-			this.whitePieces.remove(new Integer(move.to + 10));
 		}
 	}
 

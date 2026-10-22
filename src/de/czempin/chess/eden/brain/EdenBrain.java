@@ -56,425 +56,340 @@
        kingCapture = true;
        return -666661;
      }
-     if ((!justExtended) && (Options.useCheckExtensions) && (checkExtensions < 4) && (Info.idDepth > 4) && (nextPos.isReceivingCheck()))
-       return checkExtension(depth, extension, position, move, originalAlpha, beta, upPv, checkExtensions, true);
-     Set markForDelete = new java.util.HashSet();
-     int retVal = 0;
-     int loopCount = 0;
-     kingCapture = false;
-     TransEntry te = nextPos.readHashtable(depth, extension);
-     Move hashMove = null;
-     int v = 666668;
-     if (te != null) {
-       hashMove = te.getMove();
-       Info.countValidAttempts += 1;
-       int validFlag = te.getValidFlag().getNr();
-       int hashValue = te.getValue();
-       if (hashMove == null) {
-         if ((validFlag == 2) && (hashValue <= alpha)) {
-           Info.hashCutoffs += 1;
-           return -alpha;
-         }
-       } else {
-         int from = hashMove.from;
-         if (nextPos.board[from] == 0) {
-           hashMove = null;
-         } else {
-           Vector downPv = new Vector();
-           if ((validFlag == 1) && (depth > 1)) {
-             Info.countValidFlag += 1;
-             Info.hashCutoffs += 1;
-             if (hashValue >= beta) {
-               return -beta;
-             }
-             if (hashValue > alpha) {
-               upPv.clear();
-               upPv.add(hashMove);
-               return -hashValue;
-             }
-             return -alpha;
-           } else {
-             if (validFlag == 4) {
-               if (hashValue >= beta) {
-                 Info.hashCutoffs += 1;
-                 return -beta;
-               }
-             } else if ((validFlag == 2) && (hashValue <= alpha)) {
-               Info.hashCutoffs += 1;
-               return -alpha;
-             }
-             moveStack.push(hashMove);
-             v = alphabeta(depth + 1, extension, nextPos, hashMove, -beta, -alpha, downPv, checkExtensions, false);
-             moveStack.pop();
-             if (timeIsUp) {
-               kingCapture = false;
-               return 0;
-             }
-             if (kingCapture) {
-               illegalCount += 1;
-               hashMove = null;
-               kingCapture = false;
-             } else {
-               loopCount++;
-               value = v;
-               if (value >= beta) {
-                 Info.hashCutoffs += 1;
-                 retVal = -beta;
-                 return retVal;
-               }
-               if (value > alpha) {
-                 alpha = value;
-                 upPv.clear();
-                 upPv.add(hashMove);
-                 upPv.addAll(downPv);
-               }
-               bestMove = hashMove;
-             }
-           }
-         }
-       }
-     }
-     if (depth >= Info.idDepth + extension) {
-       if (Options.useQuiescence) {
-         Vector downPv = new Vector();
-         value = quiescence_alphabeta(depth, position, move, alpha, beta, downPv, nextPos);
-         upPv.clear();
-         upPv.addAll(downPv);
-         return value;
-       }
-       if (nextPos.isGivingCheck()) {
-         illegalCount += 1;
-         kingCapture = true;
-         return -666661;
-       }
-       value = nextPos.getValue();
-       return -value;
-     }
-     
-     int loop2 = 0;
-     SortedSet captureMoves = nextPos.generateCaptureMoves();
-     Iterator it = captureMoves.iterator();
-     SortedSet deferredMoves = new TreeSet();
-     while (it.hasNext()) {
-       Move newMove = (Move)it.next();
-       if ((hashMove == null) || (!newMove.equals(hashMove))) {
-         int capture = newMove.capturedPiece;
-         int captureAbs = Math.abs(capture);
-         int movingAbs = Math.abs(newMove.movingPiece);
-         if (captureAbs == 6) {
-           illegalCount += 1;
-           kingCapture = true;
-           return -666666;
-         }
-         if (timeUp()) {
-           timeIsUp = true;
-           return 0;
-         }
-         moveStack.push(newMove);
-         Vector downPv = new Vector();
-         v = alphabeta(depth + 1, extension, nextPos, newMove, -beta, -alpha, downPv, checkExtensions, false);
-         moveStack.pop();
-         if (timeIsUp) {
-           kingCapture = false;
-           return 0;
-         }
-         if (kingCapture) {
-           illegalCount += 1;
-           markForDelete.add(newMove);
-           kingCapture = false;
-         } else {
-           if (bestMove == null)
-             bestMove = newMove;
-           loopCount++;
-           loop2++;
-           value = v;
-           if (value >= beta) {
-             Info.betaCutoffs += 1;
-             if (loop2 == 1)
-               Info.betaCutoffsFirstMove += 1;
-             Info.pieceCapturingCutoffs[movingAbs] += 1;
-             Info.pieceCapturedCutoffs[captureAbs] += 1;
-             nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
-             retVal = -beta;
-             return retVal;
-           }
-           if (value > alpha) {
-             alpha = value;
-             upPv.clear();
-             upPv.add(newMove);
-             upPv.addAll(downPv);
-             if (alpha > 80000) {
-               nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
-               return -alpha;
-             }
-             bestMove = newMove;
-           }
-         }
-       }
-     }
-     SortedSet nonCaptureMoves = new TreeSet();
-     nonCaptureMoves = nextPos.generateNonCaptureMoves();
-     Move killerMove1 = checkKillerMove1(depth);
-     if ((killerMove1 != null) && (!killerMove1.equals(hashMove))) {
-       Iterator itx = nonCaptureMoves.iterator();
-       boolean killerIsLegal = false;
-       while (itx.hasNext()) {
-         Move m = (Move)itx.next();
-         if ((m.from == killerMove1.from) && (m.to == killerMove1.to) && (m.promotedTo == killerMove1.promotedTo)) {
-           killerMove1 = m;
-           killerIsLegal = true;
-           break;
-         }
-       }
-       if (!killerIsLegal) {
-         for (itx = deferredMoves.iterator(); itx.hasNext();) {
-           Move m = (Move)itx.next();
-           if ((m.from == killerMove1.from) && (m.to == killerMove1.to) && (m.promotedTo == killerMove1.promotedTo)) {
-             killerMove1 = m;
-             killerIsLegal = true;
-             break;
-           }
-         }
-       }
-       if (!killerIsLegal) {
-         killerMove1 = null;
-       } else {
-         moveStack.push(killerMove1);
-         Vector downPv = new Vector();
-         value = alphabeta(depth + 1, extension, nextPos, killerMove1, -beta, -alpha, downPv, checkExtensions, false);
-         moveStack.pop();
-         if (timeIsUp) {
-           kingCapture = false;
-           return 0;
-         }
-         if (kingCapture) {
-           illegalCount += 1;
-           killerMove1 = null;
-           kingCapture = false;
-         } else {
-           loopCount++;
-           Info.killerHits += 1;
-           if (value >= beta) {
-             Info.killerCutoffs += 1;
-             nextPos.writeHashtable(killerMove1, depth, extension, value, originalAlpha, beta);
-             retVal = -beta;
-             return retVal;
-           }
-           if (bestMove == null)
-             bestMove = killerMove1;
-           if (value > alpha) {
-             alpha = value;
-             bestMove = killerMove1;
-             upPv.clear();
-             upPv.add(killerMove1);
-             upPv.addAll(downPv);
-           }
-         }
-       }
-     }
-     Move killerMove2 = checkKillerMove2(depth);
-     if ((killerMove2 != null) && (!killerMove2.equals(hashMove))) {
-       Iterator itx = nonCaptureMoves.iterator();
-       boolean killerIsLegal = false;
-       while (itx.hasNext()) {
-         Move m = (Move)itx.next();
-         if ((m.from == killerMove2.from) && (m.to == killerMove2.to) && (m.promotedTo == killerMove2.promotedTo)) {
-           killerMove2 = m;
-           killerIsLegal = true;
-           break;
-         }
-       }
-       if (!killerIsLegal) {
-         for (itx = deferredMoves.iterator(); itx.hasNext();) {
-           Move m = (Move)itx.next();
-           if ((m.from == killerMove2.from) && (m.to == killerMove2.to) && (m.promotedTo == killerMove2.promotedTo)) {
-             killerMove2 = m;
-             killerIsLegal = true;
-             break;
-           }
-         }
-       }
-       if (!killerIsLegal) {
-         killerMove2 = null;
-       } else {
-         moveStack.push(killerMove2);
-         Vector downPv = new Vector();
-         value = alphabeta(depth + 1, extension, nextPos, killerMove2, -beta, -alpha, downPv, checkExtensions, false);
-         moveStack.pop();
-         if (timeIsUp) {
-           kingCapture = false;
-           return 0;
-         }
-         if (kingCapture) {
-           illegalCount += 1;
-           killerMove2 = null;
-           kingCapture = false;
-         } else {
-           loopCount++;
-           Info.killerHits += 1;
-           if (bestMove == null)
-             bestMove = killerMove2;
-           if (value >= beta) {
-             Info.killerCutoffs += 1;
-             nextPos.writeHashtable(killerMove2, depth, extension, value, originalAlpha, beta);
-             retVal = -beta;
-             return retVal;
-           }
-           if (value > alpha) {
-             alpha = value;
-             bestMove = killerMove2;
-             upPv.clear();
-             upPv.add(killerMove2);
-             upPv.addAll(downPv);
-           }
-         }
-       }
-     }
-     for (Iterator it2 = nonCaptureMoves.iterator(); it2.hasNext();) {
-       Move newMove = (Move)it2.next();
-       if (((hashMove == null) || (!newMove.equals(hashMove))) && ((killerMove1 == null) || (!newMove.equals(killerMove1))) && (
-         (killerMove2 == null) || (!newMove.equals(killerMove2)))) {
-         int capture = newMove.capturedPiece;
-         int captureAbs = Math.abs(capture);
-         int movingAbs = Math.abs(newMove.movingPiece);
-         if (captureAbs == 6) {
-           illegalCount += 1;
-           kingCapture = true;
-           return -666667;
-         }
-         if (timeUp()) {
-           timeIsUp = true;
-           return 0;
-         }
-         moveStack.push(newMove);
-         Vector downPv = new Vector();
-         v = alphabeta(depth + 1, extension, nextPos, newMove, -beta, -alpha, downPv, checkExtensions, false);
-         moveStack.pop();
-         if (timeIsUp) {
-           kingCapture = false;
-           return 0;
-         }
-         if (kingCapture) {
-           illegalCount += 1;
-           markForDelete.add(newMove);
-           kingCapture = false;
-         } else {
-           if (bestMove == null)
-             bestMove = newMove;
-           loopCount++;
-           value = v;
-           loop2++;
-           if (value >= beta) {
-             Info.betaCutoffs += 1;
-             if (loop2 == 1)
-               Info.betaCutoffsFirstMove += 1;
-             Info.pieceMovingCutoffs[movingAbs] += 1;
-             nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
-             addToKillers(depth, newMove);
-             retVal = -beta;
-             return retVal;
-           }
-           if (value > alpha) {
-             upPv.clear();
-             upPv.add(newMove);
-             upPv.addAll(downPv);
-             if (!newMove.equals(hashMove)) {
-               nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
-               addToKillers(depth, newMove);
-             }
-             if (alpha > 80000) {
-               nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
-               return -value;
-             }
-             alpha = value;
-             bestMove = newMove;
-           }
-         }
-       }
-     }
-     
-     for (Iterator it3 = deferredMoves.iterator(); it3.hasNext();) {
-       Move newMove = (Move)it3.next();
-       if (((hashMove == null) || (!newMove.equals(hashMove))) && ((killerMove1 == null) || (!newMove.equals(killerMove1))) && (
-         (killerMove2 == null) || (!newMove.equals(killerMove2)))) {
-         int capture = newMove.capturedPiece;
-         int captureAbs = Math.abs(capture);
-         int movingAbs = Math.abs(newMove.movingPiece);
-         if (captureAbs == 6) {
-           illegalCount += 1;
-           kingCapture = true;
-           return -666665;
-         }
-         if (timeUp()) {
-           timeIsUp = true;
-           return 0;
-         }
-         moveStack.push(newMove);
-         Vector downPv = new Vector();
-         v = alphabeta(depth + 1, extension, nextPos, newMove, -beta, -alpha, downPv, checkExtensions, false);
-         moveStack.pop();
-         if (timeIsUp) {
-           kingCapture = false;
-           return 0;
-         }
-         if (kingCapture) {
-           illegalCount += 1;
-           markForDelete.add(newMove);
-           kingCapture = false;
-         } else {
-           if (bestMove == null)
-             bestMove = newMove;
-           loopCount++;
-           value = v;
-           loop2++;
-           if (value >= beta) {
-             Info.betaCutoffs += 1;
-             if (loop2 == 1)
-               Info.betaCutoffsFirstMove += 1;
-             Info.pieceCapturingCutoffs[movingAbs] += 1;
-             Info.pieceCapturedCutoffs[captureAbs] += 1;
-             nextPos.writeHashtable(bestMove, depth, extension, value, originalAlpha, beta);
-             retVal = -beta;
-             return retVal;
-           }
-           if (value > alpha) {
-             alpha = value;
-             upPv.clear();
-             upPv.add(newMove);
-             upPv.addAll(downPv);
-             if (!newMove.equals(hashMove))
-               addToKillers(depth, newMove);
-             if (alpha > 80000) {
-               nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
-               return -alpha;
-             }
-             bestMove = newMove;
-           }
-         }
-       }
-     }
-     
-     SortedSet moves = new TreeSet();
-     moves.addAll(captureMoves);
-     moves.addAll(nonCaptureMoves);
-     moves.removeAll(markForDelete);
-     if ((loopCount == 0) || (moves.size() == 0)) {
-       if (nextPos.isReceivingCheck()) {
-         value = -(90000 - depth);
-         return -value;
-       }
-       return 0;
-     }
-     if ((loopCount == 1) || (moves.size() == 1)) {
-       if (bestMove == null) {
-         bestMove = (Move)moves.first();
-         if (bestMove == null)
-           throw new IllegalStateException("move is null!");
-       }
-       Move onlyMove = bestMove;
-       alpha = forcedMoveExtension(depth, extension, originalAlpha, beta, upPv, nextPos, onlyMove, alpha, checkExtensions);
-       bestMove = onlyMove;
-     }
+      if ((!justExtended) && (Options.useCheckExtensions) && (checkExtensions < 4) && (Info.idDepth > 4) && (nextPos.isReceivingCheck()))
+        return checkExtension(depth, extension, position, move, originalAlpha, beta, upPv, checkExtensions, true);
+      int retVal = 0;
+      int loopCount = 0;
+      kingCapture = false;
+      TransEntry te = nextPos.readHashtable(depth, extension);
+      Move hashMove = null;
+      int v = 666668;
+      if (te != null) {
+        hashMove = te.getMove();
+        Info.countValidAttempts += 1;
+        int validFlag = te.getValidFlag().getNr();
+        int hashValue = te.getValue();
+        if (hashMove == null) {
+          if ((validFlag == 2) && (hashValue <= alpha)) {
+            Info.hashCutoffs += 1;
+            return -alpha;
+          }
+        } else {
+          int from = hashMove.from;
+          if (nextPos.board[from] == 0) {
+            hashMove = null;
+          } else {
+            Vector downPv = new Vector();
+            if ((validFlag == 1) && (depth > 1)) {
+              Info.countValidFlag += 1;
+              Info.hashCutoffs += 1;
+              if (hashValue >= beta) {
+                return -beta;
+              }
+              if (hashValue > alpha) {
+                upPv.clear();
+                upPv.add(hashMove);
+                return -hashValue;
+              }
+              return -alpha;
+            } else {
+              if (validFlag == 4) {
+                if (hashValue >= beta) {
+                  Info.hashCutoffs += 1;
+                  return -beta;
+                }
+              } else if ((validFlag == 2) && (hashValue <= alpha)) {
+                Info.hashCutoffs += 1;
+                return -alpha;
+              }
+              if (depth < Info.idDepth + extension) {
+                moveStack.push(hashMove);
+                v = alphabeta(depth + 1, extension, nextPos, hashMove, -beta, -alpha, downPv, checkExtensions, false);
+                moveStack.pop();
+                if (timeIsUp) {
+                  kingCapture = false;
+                  return 0;
+                }
+                if (kingCapture) {
+                  illegalCount += 1;
+                  hashMove = null;
+                  kingCapture = false;
+                } else {
+                  loopCount++;
+                  value = v;
+                  if (value >= beta) {
+                    Info.hashCutoffs += 1;
+                    retVal = -beta;
+                    return retVal;
+                  }
+                  if (value > alpha) {
+                    alpha = value;
+                    upPv.clear();
+                    upPv.add(hashMove);
+                    upPv.addAll(downPv);
+                  }
+                  bestMove = hashMove;
+                }
+              }
+            }
+          }
+        }
+      }
+      if (depth >= Info.idDepth + extension) {
+        if (Options.useQuiescence) {
+          Vector downPv = new Vector();
+          value = quiescence_alphabeta(depth, position, move, alpha, beta, downPv, nextPos);
+          upPv.clear();
+          upPv.addAll(downPv);
+          return value;
+        }
+        if (nextPos.isGivingCheck()) {
+          illegalCount += 1;
+          kingCapture = true;
+          return -666661;
+        }
+        value = nextPos.getValue();
+        return -value;
+      }
+      
+      int loop2 = 0;
+      SortedSet captureMoves = nextPos.generateCaptureMoves();
+      Iterator it = captureMoves.iterator();
+      while (it.hasNext()) {
+        Move newMove = (Move)it.next();
+        if ((hashMove == null) || (!newMove.equals(hashMove))) {
+          int capture = newMove.capturedPiece;
+          int captureAbs = Math.abs(capture);
+          int movingAbs = Math.abs(newMove.movingPiece);
+          if (captureAbs == 6) {
+            illegalCount += 1;
+            kingCapture = true;
+            return -666666;
+          }
+          if (timeUp()) {
+            timeIsUp = true;
+            return 0;
+          }
+          moveStack.push(newMove);
+          Vector downPv = new Vector();
+          v = alphabeta(depth + 1, extension, nextPos, newMove, -beta, -alpha, downPv, checkExtensions, false);
+          moveStack.pop();
+          if (timeIsUp) {
+            kingCapture = false;
+            return 0;
+          }
+          if (kingCapture) {
+            illegalCount += 1;
+            kingCapture = false;
+          } else {
+            if (bestMove == null)
+              bestMove = newMove;
+            loopCount++;
+            loop2++;
+            value = v;
+            if (value >= beta) {
+              Info.betaCutoffs += 1;
+              if (loop2 == 1)
+                Info.betaCutoffsFirstMove += 1;
+              Info.pieceCapturingCutoffs[movingAbs] += 1;
+              Info.pieceCapturedCutoffs[captureAbs] += 1;
+              nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
+              retVal = -beta;
+              return retVal;
+            }
+            if (value > alpha) {
+              alpha = value;
+              upPv.clear();
+              upPv.add(newMove);
+              upPv.addAll(downPv);
+              if (alpha > 80000) {
+                nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
+                return -alpha;
+              }
+              bestMove = newMove;
+            }
+          }
+        }
+      }
+      SortedSet nonCaptureMoves = nextPos.generateNonCaptureMoves();
+      Move killerMove1 = checkKillerMove1(depth);
+      if ((killerMove1 != null) && (!killerMove1.equals(hashMove))) {
+        Iterator itx = nonCaptureMoves.iterator();
+        boolean killerIsLegal = false;
+        while (itx.hasNext()) {
+          Move m = (Move)itx.next();
+          if ((m.from == killerMove1.from) && (m.to == killerMove1.to) && (m.promotedTo == killerMove1.promotedTo)) {
+            killerMove1 = m;
+            killerIsLegal = true;
+            break;
+          }
+        }
+        if (!killerIsLegal) {
+          killerMove1 = null;
+        } else {
+          moveStack.push(killerMove1);
+          Vector downPv = new Vector();
+          value = alphabeta(depth + 1, extension, nextPos, killerMove1, -beta, -alpha, downPv, checkExtensions, false);
+          moveStack.pop();
+          if (timeIsUp) {
+            kingCapture = false;
+            return 0;
+          }
+          if (kingCapture) {
+            illegalCount += 1;
+            killerMove1 = null;
+            kingCapture = false;
+          } else {
+            loopCount++;
+            Info.killerHits += 1;
+            if (value >= beta) {
+              Info.killerCutoffs += 1;
+              nextPos.writeHashtable(killerMove1, depth, extension, value, originalAlpha, beta);
+              retVal = -beta;
+              return retVal;
+            }
+            if (bestMove == null)
+              bestMove = killerMove1;
+            if (value > alpha) {
+              alpha = value;
+              bestMove = killerMove1;
+              upPv.clear();
+              upPv.add(killerMove1);
+              upPv.addAll(downPv);
+            }
+          }
+        }
+      }
+      Move killerMove2 = checkKillerMove2(depth);
+      if ((killerMove2 != null) && (!killerMove2.equals(hashMove))) {
+        Iterator itx = nonCaptureMoves.iterator();
+        boolean killerIsLegal = false;
+        while (itx.hasNext()) {
+          Move m = (Move)itx.next();
+          if ((m.from == killerMove2.from) && (m.to == killerMove2.to) && (m.promotedTo == killerMove2.promotedTo)) {
+            killerMove2 = m;
+            killerIsLegal = true;
+            break;
+          }
+        }
+        if (!killerIsLegal) {
+          killerMove2 = null;
+        } else {
+          moveStack.push(killerMove2);
+          Vector downPv = new Vector();
+          value = alphabeta(depth + 1, extension, nextPos, killerMove2, -beta, -alpha, downPv, checkExtensions, false);
+          moveStack.pop();
+          if (timeIsUp) {
+            kingCapture = false;
+            return 0;
+          }
+          if (kingCapture) {
+            illegalCount += 1;
+            killerMove2 = null;
+            kingCapture = false;
+          } else {
+            loopCount++;
+            Info.killerHits += 1;
+            if (bestMove == null)
+              bestMove = killerMove2;
+            if (value >= beta) {
+              Info.killerCutoffs += 1;
+              nextPos.writeHashtable(killerMove2, depth, extension, value, originalAlpha, beta);
+              retVal = -beta;
+              return retVal;
+            }
+            if (value > alpha) {
+              alpha = value;
+              bestMove = killerMove2;
+              upPv.clear();
+              upPv.add(killerMove2);
+              upPv.addAll(downPv);
+            }
+          }
+        }
+      }
+      for (Iterator it2 = nonCaptureMoves.iterator(); it2.hasNext();) {
+        Move newMove = (Move)it2.next();
+        if (((hashMove == null) || (!newMove.equals(hashMove))) && ((killerMove1 == null) || (!newMove.equals(killerMove1))) && (
+          (killerMove2 == null) || (!newMove.equals(killerMove2)))) {
+          int capture = newMove.capturedPiece;
+          int captureAbs = Math.abs(capture);
+          int movingAbs = Math.abs(newMove.movingPiece);
+          if (captureAbs == 6) {
+            illegalCount += 1;
+            kingCapture = true;
+            return -666667;
+          }
+          if (timeUp()) {
+            timeIsUp = true;
+            return 0;
+          }
+          moveStack.push(newMove);
+          Vector downPv = new Vector();
+          if (loopCount >= 3 && (Info.idDepth - depth) >= 2 && newMove.promotedTo == 0 && !nextPos.isReceivingCheck()) {
+            v = alphabeta(depth + 2, extension, nextPos, newMove, -(alpha + 1), -alpha, downPv, checkExtensions, false);
+            if (!timeIsUp && !kingCapture && v > alpha) {
+              downPv.clear();
+              v = alphabeta(depth + 1, extension, nextPos, newMove, -beta, -alpha, downPv, checkExtensions, false);
+            }
+          } else {
+            v = alphabeta(depth + 1, extension, nextPos, newMove, -beta, -alpha, downPv, checkExtensions, false);
+          }
+          moveStack.pop();
+          if (timeIsUp) {
+            kingCapture = false;
+            return 0;
+          }
+          if (kingCapture) {
+            illegalCount += 1;
+            kingCapture = false;
+          } else {
+            if (bestMove == null)
+              bestMove = newMove;
+            loopCount++;
+            value = v;
+            loop2++;
+            if (value >= beta) {
+              Info.betaCutoffs += 1;
+              if (loop2 == 1)
+                Info.betaCutoffsFirstMove += 1;
+              Info.pieceMovingCutoffs[movingAbs] += 1;
+              nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
+              addToKillers(depth, newMove);
+              retVal = -beta;
+              return retVal;
+            }
+            if (value > alpha) {
+              upPv.clear();
+              upPv.add(newMove);
+              upPv.addAll(downPv);
+              if (!newMove.equals(hashMove)) {
+                nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
+                addToKillers(depth, newMove);
+              }
+              if (alpha > 80000) {
+                nextPos.writeHashtable(newMove, depth, extension, value, originalAlpha, beta);
+                return -value;
+              }
+              alpha = value;
+              bestMove = newMove;
+            }
+          }
+        }
+      }
+      
+      if (loopCount == 0) {
+        if (nextPos.isReceivingCheck()) {
+          value = -(90000 - depth);
+          return -value;
+        }
+        return 0;
+      }
+      if (loopCount == 1 && bestMove != null) {
+        Move onlyMove = bestMove;
+        alpha = forcedMoveExtension(depth, extension, originalAlpha, beta, upPv, nextPos, onlyMove, alpha, checkExtensions);
+        bestMove = onlyMove;
+      }
      addToKillers(depth, bestMove);
      nextPos.writeHashtable(bestMove, depth, extension, alpha, originalAlpha, beta);
      return -alpha;
@@ -639,7 +554,7 @@ String pv;
        bestMoveValidFlag.setNr(1);
        alpha = v;
      }
-     if (depth - Info.idDepth >= (Info.idDepth <= 1 ? 2 : 6)) {
+     if (depth - Info.idDepth >= 10) {
        return -alpha;
      }
      kingCapture = false;
@@ -684,43 +599,36 @@ String pv;
          }
        }
      }
-     if (loopCount == 0) {
-       nextPos.initNonCaptureMoveGenerator();
-       boolean legal = false;
-       while (nextPos.hasNextNonCaptureMove()) {
-         Move testMove = nextPos.nextNonCaptureMove();
-         Info.quiescentMateCheckNodes += 1;
-         Position tp = Position.createTestPosition(nextPos, testMove);
-         if (!tp.isGivingCheck()) {
-           legal = true;
-           break;
-         }
-       }
-       if (!legal) {
-         SortedSet lMoves = nextPos.generateLegalMoves();
-         if (lMoves.size() == 0) {
-           if (nextPos.isMate()) {
-             int value = -90000 + depth;
-             return -value;
-           }
-           return 0;
-         }
-       }
-       alpha = v;
-     }
-     return -alpha;
-   }
-   
-   private static long randomZobrist() {
-     return r.nextLong();
-   }
-   
-   private static boolean shouldBeIgnored(Position nextPos, Move newMove, int capture, int capturing) {
-     if (capture - capturing >= 0)
-       return false;
-     Position tp = Position.createTestPosition(nextPos, newMove);
-     return tp.isAttacked(newMove.to, tp.onMove());
-   }
+      if (loopCount == 0 && nextPos.isReceivingCheck()) {
+        nextPos.initNonCaptureMoveGenerator();
+        boolean legal = false;
+        while (nextPos.hasNextNonCaptureMove()) {
+          Move testMove = nextPos.nextNonCaptureMove();
+          Info.quiescentMateCheckNodes += 1;
+          Position tp = Position.createTestPosition(nextPos, testMove);
+          if (!tp.isGivingCheck()) {
+            legal = true;
+            break;
+          }
+        }
+        if (!legal) {
+          int value = -90000 + depth;
+          return -value;
+        }
+      }
+      return -alpha;
+    }
+    
+    private static long randomZobrist() {
+      return r.nextLong();
+    }
+    
+    private static boolean shouldBeIgnored(Position nextPos, Move newMove, int capture, int capturing) {
+      if (capture - capturing >= 0 || nextPos.isReceivingCheck())
+        return false;
+      Position tp = Position.createTestPosition(nextPos, newMove);
+      return tp.isAttacked(newMove.to, nextPos.onMove());
+    }
    
    private boolean timeUp() {
      if (Info.idDepth <= 1)
@@ -1133,7 +1041,7 @@ Set zob;
    
    public String getVersion()
    {
-     return "0.0.15";
+     return "0.0.15-rc1";
    }
  }
 
