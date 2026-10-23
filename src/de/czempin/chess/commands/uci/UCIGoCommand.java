@@ -21,15 +21,28 @@
    
    public String execute(String parameters)
    {
+     int perftDepth = extractIntValue(parameters, "perft");
+     if (perftDepth > 0) {
+       long start = System.currentTimeMillis();
+       long nodes = de.czempin.chess.eden.brain.EdenBrain.perft(de.czempin.chess.eden.brain.EdenBrain.position, perftDepth);
+       long elapsed = Math.max(1L, System.currentTimeMillis() - start);
+       return "Nodes searched: " + nodes + " (" + elapsed + " ms)\n";
+     }
      int wtime = extractIntValue(parameters, "wtime");
      int btime = extractIntValue(parameters, "btime");
      int winc = extractIntValue(parameters, "winc");
      int binc = extractIntValue(parameters, "binc");
+     int movetime = extractIntValue(parameters, "movetime");
      int mtg = extractIntValue(parameters, "movestogo");
      if (mtg == 0)
        mtg = 25;
      this.engine.setMovesToGo(mtg);
      this.engine.setTimes(wtime, btime, winc, binc);
+     if (movetime > 0) {
+       this.engine.setTimePerMove(Math.max(5L, movetime - Math.min(30L, movetime / 5L)));
+     } else {
+       this.engine.setTimePerMove(-1L);
+     }
      int depth = extractIntValue(parameters, "depth");
      this.engine.setDepth(depth);
      if (this.engine.isSynchronous()) {

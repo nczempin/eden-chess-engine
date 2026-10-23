@@ -20,8 +20,9 @@
    
    public String execute(String parameters)
    {
+     this.engine.stopBrain();
      this.brain.initializeGame();
-     return "isready\n";
+     return "";
    }
    
    protected String commandString() {

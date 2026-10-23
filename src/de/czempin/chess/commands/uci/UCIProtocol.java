@@ -39,62 +39,68 @@
      if (line.startsWith("go")) {
        return new UCIGoCommand(this.engine, line);
      }
+     if (line.startsWith("perft")) {
+       return new UCIGoCommand(this.engine, "go " + line);
+     }
      return de.czempin.chess.commands.UnknownCommand.getInstance();
    }
    
    public String printMoveMade(String move) {
-     return "\nbestmove " + move + "\n";
+     return "bestmove " + move;
    }
    
    public void printInfo() {
      if ((!Options.DEBUG) && (Info.idDepth < Options.minimumPlyForDisplay))
        return;
-     System.out.print("info");
-     System.out.print(" nodes " + Info.nodes);
-     Info.time = System.currentTimeMillis() - Info.searchtime;
-     long nps = Info.nodes * 1000L / (Info.time + 1L);
-     if (nps < 0L)
-       throw new IllegalStateException("nps <0, : " + nps);
-     System.out.print(" nps " + nps);
-     if (Options.useTranspositionTable)
-       System.out.print(" hashfull " + Info.hashFull);
-     System.out.println();
-     printDebugInfo();
+     synchronized (System.out) {
+       System.out.print("info");
+       System.out.print(" nodes " + Info.nodes);
+       Info.time = System.currentTimeMillis() - Info.searchtime;
+       long elapsed = Math.max(1L, Info.time + 1L);
+       long nps = Math.max(0L, Info.nodes * 1000L / elapsed);
+       System.out.print(" nps " + nps);
+       if (Options.useTranspositionTable)
+         System.out.print(" hashfull " + Info.hashFull);
+       System.out.println();
+       printDebugInfo();
+       System.out.flush();
+     }
    }
    
    public void printPV()
    {
-     SortedSet values = new TreeSet();
-     values.addAll(this.engine.getMultiPvs());
-     Iterator it = values.iterator();
-     int i = 0;
-     for (; it.hasNext(); System.out.println()) {
-       i++; if (i > Options.multiPvDisplayNumber)
-         break;
-       Variation variation = (Variation)it.next();
-       Vector v = variation.getLine();
-       String pv = this.engine.getBrain().extractVariationString(v);
-       System.out.print("info");
-       int multipvRank = i;
-       int multiPvValue = variation.getValue();
-       assert (multiPvValue < 99999);
-       
-       assert (multiPvValue > -99999);
-       
-       int multiPvDepth = variation.getDepth();
-       System.out.print(" depth " + multiPvDepth);
-       if (Options.multiPvDisplayNumber > 1)
-         System.out.print(" multipv " + multipvRank);
-       if ((multiPvValue > 80000) && (multiPvValue < 90000)) {
-         int mateIn = (90000 - multiPvValue) / 2 + 1;
-         System.out.print(" score mate " + mateIn);
-       } else if ((multiPvValue < -80000) && (multiPvValue > -90000)) {
-         int mateIn = (-90000 - multiPvValue) / 2 - 1;
-         System.out.print(" score mate " + mateIn);
-       } else {
-         System.out.print(" score cp " + multiPvValue);
+     synchronized (System.out) {
+       SortedSet values = new TreeSet();
+       synchronized (de.czempin.chess.eden.Eden.multiPvs) {
+         values.addAll(this.engine.getMultiPvs());
        }
-       System.out.print(" pv " + pv);
+       Iterator it = values.iterator();
+       int i = 0;
+       for (; it.hasNext(); System.out.println()) {
+         i++; if (i > Options.multiPvDisplayNumber)
+           break;
+         Variation variation = (Variation)it.next();
+         Vector v = variation.getLine();
+         String pv = this.engine.getBrain().extractVariationString(v);
+         System.out.print("info");
+         int multipvRank = i;
+         int multiPvValue = variation.getValue();
+         int multiPvDepth = variation.getDepth();
+         System.out.print(" depth " + multiPvDepth);
+         if (Options.multiPvDisplayNumber > 1)
+           System.out.print(" multipv " + multipvRank);
+         if ((multiPvValue > 80000) && (multiPvValue <= 90000)) {
+           int mateIn = (90000 - multiPvValue) / 2 + 1;
+           System.out.print(" score mate " + mateIn);
+         } else if ((multiPvValue < -80000) && (multiPvValue >= -90000)) {
+           int mateIn = (-90000 - multiPvValue) / 2 - 1;
+           System.out.print(" score mate " + mateIn);
+         } else {
+           System.out.print(" score cp " + multiPvValue);
+         }
+         System.out.print(" pv " + pv);
+       }
+       System.out.flush();
      }
    }
    
@@ -104,14 +110,17 @@
        return;
      if (currmovenumber == 0)
        return;
-     if (withInfoPrefix)
-       System.out.print("info");
-     System.out.print(" currmove " + currentmove + " currmovenumber " + currmovenumber);
-     System.out.print(" depth " + Info.idDepth);
-     if (Info.seldepth > Info.idDepth)
-       System.out.print(" seldepth " + Info.seldepth);
-     if (withInfoPrefix) {
-       System.out.println();
+     synchronized (System.out) {
+       if (withInfoPrefix)
+         System.out.print("info");
+       System.out.print(" currmove " + currentmove + " currmovenumber " + currmovenumber);
+       System.out.print(" depth " + Info.idDepth);
+       if (Info.seldepth > Info.idDepth)
+         System.out.print(" seldepth " + Info.seldepth);
+       if (withInfoPrefix) {
+         System.out.println();
+       }
+       System.out.flush();
      }
    }
  }
