@@ -1707,7 +1707,12 @@ public class Position {
 	}
 
 	public int getEndgameValue() {
-		if ((this.wpc.isKBNK()) || (this.bpc.isKBNK()))
+		boolean kbnk = (this.wpc != null && this.wpc.isKBNK()) || (this.bpc != null && this.bpc.isKBNK());
+		return getEndgameValueFast(kbnk);
+	}
+
+	private int getEndgameValueFast(boolean kbnk) {
+		if (kbnk)
 			adjustKingSquaresForKBNK();
 		int whiteValue = 0;
 		int blackValue = 0;
@@ -2105,14 +2110,53 @@ public class Position {
 	}
 
 	public int getValue() {
-		this.wpc = countWhitePieces();
-		this.bpc = countBlackPieces();
-		if (isInsufficientMaterial(this.wpc, this.bpc))
-			return 0;
-		if (isInsufficientMaterial(this.bpc, this.wpc))
-			return 0;
-		if (isEndgame()) {
-			return getEndgameValue();
+		int wp = 0, wn = 0, wb = 0, wr = 0, wq = 0;
+		int bp = 0, bn = 0, bb = 0, br = 0, bq = 0;
+		for (int i = 11; i < 89; i++) {
+			switch (this.board[i]) {
+			case 1: wp++; break;
+			case 2: wn++; break;
+			case 3: wb++; break;
+			case 4: wr++; break;
+			case 5: wq++; break;
+			case -1: bp++; break;
+			case -2: bn++; break;
+			case -3: bb++; break;
+			case -4: br++; break;
+			case -5: bq++; break;
+			}
+		}
+		boolean wLightOnly = (wp == 0 && wr == 0 && wq == 0);
+		boolean bLightOnly = (bp == 0 && br == 0 && bq == 0);
+		if (wLightOnly && bLightOnly) {
+			boolean wInsuff = (wn == 0 && wb <= 1) || (wb == 0 && wn <= 2);
+			boolean bInsuff = (bn == 0 && bb <= 1) || (bb == 0 && bn <= 2);
+			if (wInsuff && bInsuff)
+				return 0;
+		}
+		boolean endgame;
+		if ((this.isEndGame != null) && (this.isEndGame.equals(Boolean.TRUE))) {
+			endgame = true;
+		} else {
+			int lightPiecesCount = wn + wb;
+			if (wq >= 1) {
+				if (wr > 1) endgame = false;
+				else if (wr == 1 && lightPiecesCount > 0) endgame = false;
+				else endgame = (lightPiecesCount <= 2);
+			} else if (wr > 1 && lightPiecesCount > 2) {
+				endgame = false;
+			} else if (wr == 1 && lightPiecesCount > 3) {
+				endgame = false;
+			} else {
+				endgame = true;
+			}
+			if (endgame) {
+				this.isEndGame = Boolean.TRUE;
+			}
+		}
+		if (endgame) {
+			boolean kbnk = (wLightOnly && wn == 1 && wb == 1) || (bLightOnly && bn == 1 && bb == 1);
+			return getEndgameValueFast(kbnk);
 		}
 		return getMidgameValue();
 	}

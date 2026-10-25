@@ -13,7 +13,7 @@
  
  public class Eden extends AbstractEngine
  {
-   public static final String VERSION = "0.0.15-rc1";
+   public static final String VERSION = "0.0.15-rc2";
    
    public Eden()
    {

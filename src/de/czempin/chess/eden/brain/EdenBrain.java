@@ -1060,7 +1060,7 @@ Set zob;
    
    public String getVersion()
    {
-     return "0.0.15-rc1";
+     return "0.0.15-rc2";
    }
  }
 
