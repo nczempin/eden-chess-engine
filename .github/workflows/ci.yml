@@ -18,23 +18,18 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
+        cache: 'maven'
 
-    - name: Compile Eden and Build JAR
+    - name: Run JUnit 5 Tests via Maven (Java 8 target)
+      run: mvn -B test
+
+    - name: Compile Eden and Build JAR (-source 1.8 -target 1.8)
       run: |
         mkdir -p build/classes
         find src/de -name "*.java" > sources.txt
-        javac --release 8 -d build/classes @sources.txt
+        javac -source 1.8 -target 1.8 -d build/classes @sources.txt
         cp -f bookWhite.txt bookBlack.txt build/classes/ 2>/dev/null || true
         jar cfe eden.jar de.czempin.chess.eden.Eden -C build/classes .
-
-    - name: Compile and Run JUnit Suite
-      run: |
-        mkdir -p build/test-lib build/test-classes
-        curl -fsSL https://repo1.maven.org/maven2/junit/junit/4.13.2/junit-4.13.2.jar -o build/test-lib/junit.jar
-        curl -fsSL https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar -o build/test-lib/hamcrest.jar
-        find src/test/java -name "*.java" > test-sources.txt
-        javac --release 8 -cp "build/classes:build/test-lib/junit.jar:build/test-lib/hamcrest.jar" -d build/test-classes @test-sources.txt
-        java -cp "build/classes:build/test-classes:build/test-lib/junit.jar:build/test-lib/hamcrest.jar" org.junit.runner.JUnitCore de.czempin.chess.eden.brain.PositionTest
 
     - name: UCI Smoke Test
       run: |

@@ -1,9 +1,9 @@
 package de.czempin.chess.eden.brain;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import de.czempin.chess.eden.Move;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class PositionTest {
     @Test
@@ -113,6 +113,27 @@ public class PositionTest {
         Position pos4 = new Position();
         pos4.setFENPosition("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
         assertEquals(264L, EdenBrain.perft(pos4, 2));
+
+        Position pos5 = new Position();
+        pos5.setFENPosition("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
+        assertEquals(62379L, EdenBrain.perft(pos5, 3));
+    }
+
+    @Test
+    public void evaluatesMaterialAndPhaseConsistently() {
+        Position start = new Position();
+        start.setToStartPosition();
+        assertEquals(0, start.getValue());
+
+        Positioninsufficient: {
+            Position kvk = new Position();
+            kvk.setFENPosition("8/8/4k3/8/8/4K3/8/8 w - - 0 1");
+            assertEquals(0, kvk.getValue());
+
+            Position kbnk = new Position();
+            kbnk.setFENPosition("7k/8/5K2/8/8/8/2B1N3/8 w - - 0 1");
+            assertTrue(kbnk.getValue() > 500);
+        }
     }
 
     @Test
