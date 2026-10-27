@@ -56,8 +56,11 @@
        kingCapture = true;
        return -666661;
      }
-      if ((!justExtended) && (Options.useCheckExtensions) && (checkExtensions < 4) && (Info.idDepth > 4) && (nextPos.isReceivingCheck()))
-        return checkExtension(depth, extension, position, move, originalAlpha, beta, upPv, checkExtensions, true);
+      if ((!justExtended) && (Options.useCheckExtensions) && (checkExtensions < 4) && (Info.idDepth > 4) && (nextPos.isReceivingCheck())) {
+        extension += 0.9D;
+        checkExtensions += 1;
+        justExtended = true;
+      }
       int retVal = 0;
       int loopCount = 0;
       kingCapture = false;
@@ -479,7 +482,7 @@
      Info.hashHitCount = 0;
      Info.hashMiss = 0;
      Info.hashDepthMiss = 0;
-     if (Info.searchtime <= 0L || (System.currentTimeMillis() - Info.searchtime) > 500L) Info.searchtime = System.currentTimeMillis();
+     if (Info.searchtime <= 0L) Info.searchtime = System.currentTimeMillis();
      Eden.calculateTimePerMove();
      Move move = analyze();
      if (move == null)
@@ -555,7 +558,7 @@ String pv;
        bestMoveValidFlag.setNr(1);
        alpha = v;
      }
-     if (depth - Info.idDepth >= (Info.idDepth <= 1 ? 4 : 6)) {
+     if (!nextPos.isReceivingCheck() && depth - Info.idDepth >= (Info.idDepth <= 1 ? 4 : 6)) {
        return -alpha;
      }
      kingCapture = false;
@@ -632,8 +635,10 @@ String pv;
       return tp.isAttacked(newMove.to, nextPos.onMove());
     }
    
+   private boolean hasBestMoveSoFar = false;
+
    private boolean timeUp() {
-     if (Info.idDepth <= 1)
+     if ((Info.idDepth <= 1) && (!this.hasBestMoveSoFar))
        return false;
      return this.engine.timeUp();
    }
@@ -688,6 +693,7 @@ String pv;
        return bookMove;
      }
      Move bestMove = null;
+     this.hasBestMoveSoFar = false;
      position.setBestMove(null);
      position.setBestValue(bestValue);
      SortedSet orderedMoves = null;
@@ -735,6 +741,10 @@ String pv;
          moveStack.clear();
          moveStack.push(move);
          alphaBetaDraws.clear();
+         Long rootZobrist = Long.valueOf(position.getZobrist());
+         if (!threeDrawsTable.containsKey(rootZobrist)) {
+           alphaBetaDraws.put(rootZobrist, Integer.valueOf(1));
+         }
          Vector pvec = new Vector();
          int value = alphabeta(1, 0.0D, position, move, -99999, -bestValue, pvec, 0, false);
          moveStack.clear();
@@ -761,6 +771,7 @@ String pv;
            updateMultiPv(move, pvec, value, Info.idDepth);
            tmpMovesVector.add(0, move);
            bestMove = move;
+           this.hasBestMoveSoFar = true;
            bestValue = value;
            position.setBestMove(bestMove);
            position.setBestValue(bestValue);
@@ -904,6 +915,12 @@ String pv;
    
    public void clearThreeDraws() {
      threeDrawsTable.clear();
+   }
+
+   public static void recordCurrentPosition() {
+     if (position != null) {
+       threeDrawsTable.put(Long.valueOf(position.getZobrist()), Integer.valueOf(1));
+     }
    }
    
    public void setWithinAlphabeta(boolean b) {

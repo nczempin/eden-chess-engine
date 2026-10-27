@@ -2595,15 +2595,14 @@ public class Position {
 		if (!EdenBrain.withinAlphabeta) {
 			if (updateDrawCount) {
 				EdenBrain.threeDrawsTable.clear();
+			}
+			long myZobrist = getZobrist();
+			Long zobi = Long.valueOf(myZobrist);
+			if (EdenBrain.threeDrawsTable.containsKey(zobi)) {
+				Integer count = (Integer) EdenBrain.threeDrawsTable.get(zobi);
+				EdenBrain.threeDrawsTable.put(zobi, Integer.valueOf(count.intValue() + 1));
 			} else {
-				long myZobrist = getZobrist();
-				Long zobi = Long.valueOf(myZobrist);
-				if (EdenBrain.threeDrawsTable.containsKey(zobi)) {
-					Integer count = (Integer) EdenBrain.threeDrawsTable.get(zobi);
-					EdenBrain.threeDrawsTable.put(zobi, Integer.valueOf(count.intValue() + 1));
-				} else {
-					EdenBrain.threeDrawsTable.put(zobi, Integer.valueOf(1));
-				}
+				EdenBrain.threeDrawsTable.put(zobi, Integer.valueOf(1));
 			}
 		} else if (!updateDrawCount) {
 			long myZobrist = getZobrist();

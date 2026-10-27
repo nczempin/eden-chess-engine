@@ -114,4 +114,25 @@ public class PositionTest {
         pos4.setFENPosition("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
         assertEquals(264L, EdenBrain.perft(pos4, 2));
     }
+
+    @Test
+    public void goPerftZeroAndMovetimePreserveOverrides() {
+        de.czempin.chess.eden.Eden engine = new de.czempin.chess.eden.Eden();
+        de.czempin.chess.Options.protocol = new de.czempin.chess.commands.uci.UCIProtocol(engine);
+        EdenBrain.position.setToStartPosition();
+        de.czempin.chess.commands.uci.UCIGoCommand goCmd = new de.czempin.chess.commands.uci.UCIGoCommand(engine, "go perft 0");
+        String perftOut = goCmd.execute("perft 0");
+        assertTrue(perftOut.startsWith("Nodes searched: 1 "));
+
+        boolean prevSync = de.czempin.chess.Options.synchronous;
+        de.czempin.chess.Options.synchronous = true;
+        try {
+            String bestMoveOut = goCmd.execute("wtime 100000 btime 100000 movetime 50 depth 1");
+            assertTrue(bestMoveOut.startsWith("bestmove "));
+            assertEquals(0L, engine.getWtime());
+            assertEquals(0L, engine.getBtime());
+        } finally {
+            de.czempin.chess.Options.synchronous = prevSync;
+        }
+    }
 }

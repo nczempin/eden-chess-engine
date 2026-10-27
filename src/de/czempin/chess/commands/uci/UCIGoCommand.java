@@ -21,13 +21,16 @@
    
    public String execute(String parameters)
    {
-     int perftDepth = extractIntValue(parameters, "perft");
-     if (perftDepth > 0) {
-       long start = System.currentTimeMillis();
-       long nodes = de.czempin.chess.eden.brain.EdenBrain.perft(de.czempin.chess.eden.brain.EdenBrain.position, perftDepth);
-       long elapsed = Math.max(1L, System.currentTimeMillis() - start);
-       return "Nodes searched: " + nodes + " (" + elapsed + " ms)\n";
+     if ((parameters != null) && (parameters.indexOf("perft") != -1)) {
+       int perftDepth = extractIntValue(parameters, "perft");
+       if (perftDepth >= 0) {
+         long start = System.currentTimeMillis();
+         long nodes = de.czempin.chess.eden.brain.EdenBrain.perft(de.czempin.chess.eden.brain.EdenBrain.position, perftDepth);
+         long elapsed = Math.max(1L, System.currentTimeMillis() - start);
+         return "Nodes searched: " + nodes + " (" + elapsed + " ms)\n";
+       }
      }
+     de.czempin.chess.Info.searchtime = System.currentTimeMillis();
      int wtime = extractIntValue(parameters, "wtime");
      int btime = extractIntValue(parameters, "btime");
      int winc = extractIntValue(parameters, "winc");
@@ -37,10 +40,11 @@
      if (mtg == 0)
        mtg = 25;
      this.engine.setMovesToGo(mtg);
-     this.engine.setTimes(wtime, btime, winc, binc);
      if (movetime > 0) {
+       this.engine.setTimes(0, 0, 0, 0);
        this.engine.setTimePerMove(Math.max(5L, movetime - Math.min(30L, movetime / 5L)));
      } else {
+       this.engine.setTimes(wtime, btime, winc, binc);
        this.engine.setTimePerMove(-1L);
      }
      int depth = extractIntValue(parameters, "depth");
@@ -55,6 +59,9 @@
    
    private int extractIntValue(String parameters, String string)
    {
+     if (parameters == null) {
+       return 0;
+     }
      int index = parameters.indexOf(string);
      if (index == -1) {
        return 0;

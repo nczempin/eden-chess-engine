@@ -24,7 +24,6 @@
    
    protected String execute()
    {
-     de.czempin.chess.Info.searchtime = System.currentTimeMillis();
      de.czempin.chess.eden.brain.OpeningBook.prepareOpeningBook();
      setPosition();
      handleMoves();
@@ -36,6 +35,7 @@
      String movesString = extractMoves(this.actualParams).trim();
      String[] moves = movesString.split("\\s+");
      this.brain.clearThreeDraws();
+     de.czempin.chess.eden.brain.EdenBrain.recordCurrentPosition();
      if ((!movesString.isEmpty()) && (moves.length != 0))
      {
        for (int i = 0; i < moves.length; i++) {
