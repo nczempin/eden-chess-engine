@@ -24,7 +24,7 @@
    
    protected String execute()
    {
-     this.engine.initializeGame();
+     de.czempin.chess.eden.brain.OpeningBook.prepareOpeningBook();
      setPosition();
      handleMoves();
      return "";
@@ -32,13 +32,17 @@
    
    private void handleMoves()
    {
-     String movesString = extractMoves(this.actualParams);
-     String[] moves = movesString.split(" ");
+     String movesString = extractMoves(this.actualParams).trim();
+     String[] moves = movesString.split("\\s+");
      this.brain.clearThreeDraws();
-     if ((movesString != "") && (moves.length != 0))
+     de.czempin.chess.eden.brain.EdenBrain.recordCurrentPosition();
+     if ((!movesString.isEmpty()) && (moves.length != 0))
      {
        for (int i = 0; i < moves.length; i++) {
-         this.brain.makeMove(moves[i]);
+         String mv = moves[i].trim();
+         if (!mv.isEmpty()) {
+           this.brain.makeMove(mv);
+         }
        }
      }
    }
@@ -46,13 +50,13 @@
    private void setPosition()
    {
      this.brain.SetEmptyPosition();
-     String positionString = extractPosition(this.actualParams);
+     String positionString = extractPosition(this.actualParams).trim();
      if (positionString.equals("startpos")) {
        this.brain.setToStartPosition();
      }
      else if (positionString.startsWith("fen"))
      {
-       String positionFen = extractFen(positionString);
+       String positionFen = extractFen(positionString).trim();
        this.brain.setFENPosition(positionFen);
      }
    }

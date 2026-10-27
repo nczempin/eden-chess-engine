@@ -29,8 +29,12 @@
      try {
        for (;;) {
          String line = br.readLine();
+         if (line == null) {
+           break;
+         }
          String result = execute(line);
          System.out.print(result);
+         System.out.flush();
        }
      } catch (java.io.IOException e) { e.printStackTrace();
      }
@@ -38,7 +42,13 @@
    
    public String execute(String line)
    {
-     line.trim();
+     if (line == null) {
+       return "";
+     }
+     line = line.trim();
+     if (line.isEmpty()) {
+       return "";
+     }
      if ("uci".equals(line)) {
        Options.protocol = new de.czempin.chess.commands.uci.UCIProtocol(this.engine);
      } else if ("xboard".equals(line)) {

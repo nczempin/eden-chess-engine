@@ -44,6 +44,7 @@ public class Move implements Comparable {
 		this.to = to;
 		this.promotedTo = promotedTo;
 		this.movingPiece = positionBefore.board[from];
+		this.capturedPiece = positionBefore.board[to];
 		}
 
 	
@@ -68,9 +69,10 @@ public class Move implements Comparable {
 		String promotedTo = move.substring(4);
 		int newPiece = 0;
 		if (!promotedTo.equals("")) {
-			newPiece = Position.decodePiece(promotedTo);
-			this.capturedPiece = newPiece;
+			newPiece = Position.decodePiece(promotedTo.toLowerCase());
+			this.promotedTo = newPiece;
 			}
+		this.capturedPiece = pos.board[to];
 		this.movingPiece = pos.board[from];
 		this.from = from;
 		this.to = to;
@@ -104,15 +106,19 @@ public class Move implements Comparable {
 		if (this == o)
 			return 0;
 		Move other = (Move) o;
+		int thisProm = Math.abs(this.promotedTo);
+		int otherProm = Math.abs(other.promotedTo);
+		if ((this.from == other.from) && (this.to == other.to) && (thisProm == otherProm))
+			return 0;
 		int thisCaptureValue = Math.abs(this.capturedPiece);
 		int otherCaptureValue = Math.abs(other.capturedPiece);
-		if (thisCaptureValue == 6)
+		if ((thisCaptureValue == 6) && (otherCaptureValue != 6))
 			return -1;
-		if (otherCaptureValue == 6)
+		if ((otherCaptureValue == 6) && (thisCaptureValue != 6))
 			return 1;
-		if (this.promotedTo == 5)
+		if ((thisProm == 5) && (otherProm != 5))
 			return -1;
-		if (other.promotedTo == 5)
+		if ((otherProm == 5) && (thisProm != 5))
 			return 1;
 		if ((this.capturedPiece != 0) && (other.capturedPiece == 0))
 			return -1;
@@ -145,37 +151,22 @@ public class Move implements Comparable {
 			int otherPieceSquareValue = getPieceSquareValue(other.from, other.to, other.movingPiece);
 			if (thisPieceSquareValue != otherPieceSquareValue)
 				return otherPieceSquareValue - thisPieceSquareValue;
-			if (this.promotedTo != 0)
-				return 1;
-			if (other.promotedTo != 0)
-				return -1;
-			int fromDiff = this.from - other.from;
+			if (thisProm != otherProm)
+				return otherProm - thisProm;
 			int toDiff = this.to - other.to;
-			if (this.movingPiece > 0) {
-				if (toDiff != 0)
-					return -toDiff;
-				if (fromDiff != 0)
-					return -fromDiff;
-				} else {
-				if (toDiff != 0)
-					return toDiff;
-				if (fromDiff != 0)
-					return fromDiff;
-				}
-			return 1;
+			if (toDiff != 0)
+				return toDiff;
+			int fromDiff = this.from - other.from;
+			return fromDiff;
 			}
-		if ((this.movingPiece == 6) || (this.movingPiece == -6)) {
-			if (Math.abs(this.from - this.to) == 2)
-				return -1;
-			} else if (((other.movingPiece == 6) || (other.movingPiece == -6)) && (Math.abs(this.from - this.to) == 2))
-			return 1;
-		if ((this.promotedTo != 0) && (other.promotedTo == 0))
-			return 1;
-		if ((other.promotedTo != 0) && (this.promotedTo == 0))
+		boolean thisCastling = ((this.movingPiece == 6) || (this.movingPiece == -6)) && (Math.abs(this.from - this.to) == 2);
+		boolean otherCastling = ((other.movingPiece == 6) || (other.movingPiece == -6)) && (Math.abs(other.from - other.to) == 2);
+		if (thisCastling && !otherCastling)
 			return -1;
-		int promoteDiff = other.promotedTo - this.promotedTo;
-		if (promoteDiff != 0)
-			return promoteDiff;
+		if (!thisCastling && otherCastling)
+			return 1;
+		if (thisProm != otherProm)
+			return otherProm - thisProm;
 		int thisPieceSquareValue = getPieceSquareValue(this.from, this.to, this.movingPiece);
 		int otherPieceSquareValue = getPieceSquareValue(other.from, other.to, other.movingPiece);
 		if (thisPieceSquareValue != otherPieceSquareValue)
@@ -186,20 +177,11 @@ public class Move implements Comparable {
 			return -1;
 		if (otherMovingAbs < thisMovingAbs)
 			return 1;
-		int fromDiff = this.from - other.from;
 		int toDiff = this.to - other.to;
-		if (this.movingPiece > 0) {
-			if (toDiff != 0)
-				return -toDiff;
-			if (fromDiff != 0)
-				return -fromDiff;
-			} else {
-			if (toDiff != 0)
-				return toDiff;
-			if (fromDiff != 0)
-				return fromDiff;
-			}
-		return 1;
+		if (toDiff != 0)
+			return toDiff;
+		int fromDiff = this.from - other.from;
+		return fromDiff;
 		}
 
 	

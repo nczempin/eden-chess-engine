@@ -13,8 +13,8 @@
    }
    
    public static void setOptions(String optionName, String optionValue) {
-     if ("OwnBook".equals(optionName)) {
-       boolean ownBook = toBoolean(optionValue);
+     if ("OwnBook".equalsIgnoreCase(optionName)) {
+       ownBook = toBoolean(optionValue);
        if (DEBUG)
          System.out.println("debug: ownBook set to " + ownBook);
      }
